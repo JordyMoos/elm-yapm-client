@@ -1,0 +1,14 @@
+CACHE MANIFEST
+# Time: Wed Jan 11 2017 00:01:21 GMT+0100 (CET)
+
+CACHE:
+index.html
+
+NETWORK:
+http://*
+https://*
+
+FALLBACK:
+
+SETTINGS:
+prefer-online

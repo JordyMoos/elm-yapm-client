@@ -1,0 +1,23 @@
+{
+  "name": "yet-another-password-manager",
+  "version": "0.3.0",
+  "repository": {
+    "type": "git",
+    "url": "https://www.github.com/marcusklaas/yet-another-password-manager"
+  },
+  "devDependencies": {
+    "es6-module-transpiler": "~0.10.0",
+    "grunt": "~0.4.1",
+    "grunt-contrib-clean": "^0.6.0",
+    "grunt-contrib-copy": "^0.8.0",
+    "grunt-contrib-htmlmin": "^0.4.0",
+    "grunt-contrib-uglify": "^0.9.1",
+    "grunt-contrib-watch": "^0.6.1",
+    "grunt-es6-transpiler": "^1.0.2",
+    "grunt-global-config": "^0.1.0",
+    "grunt-inline-alt": "^0.3.4",
+    "grunt-manifest": "^0.4.0",
+    "grunt-processhtml": "^0.3.7",
+    "grunt-uncss": "^0.4.2"
+  }
+}
