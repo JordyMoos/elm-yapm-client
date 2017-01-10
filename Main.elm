@@ -37,7 +37,7 @@ type alias Library =
 
 
 type alias LibraryData =
-  { library : Library
+  { libraryJson : String
   , hmac : String
   }
 
@@ -83,7 +83,7 @@ downloadLibrary =
 
 
 decodeLibraryData =
-  Decode.map2 LibraryData (Decode.field "library" decodeLibrary) (Decode.field "hmac" Decode.string)
+  Decode.map2 LibraryData (Decode.field "library" Decode.string) (Decode.field "hmac" Decode.string)
 
 
 decodeLibrary =
@@ -107,6 +107,8 @@ viewUnAuthSection model =
        , viewLoginForm model
        , p [] [ text model.masterKey ]
        , hr [] []
+       , viewLibraryData model.libraryData
+       , hr [] []
        , viewError model.error
        ]
     ]
@@ -119,6 +121,16 @@ viewLoginForm model =
     [ input [ placeholder "master key", onInput SetMasterKey ] []
     , button [ onClick DownloadLibrary ] [ text "Decrypt" ]
     ]
+
+
+viewLibraryData : Maybe LibraryData -> Html Msg
+viewLibraryData libraryData =
+  case libraryData of
+    Just data ->
+      p [] [ text data.libraryJson ]
+
+    Nothing ->
+      text ""
 
 
 viewError : Maybe String -> Html Msg
