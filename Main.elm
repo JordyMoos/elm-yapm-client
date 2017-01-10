@@ -5,6 +5,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Http
+import Json.Decode as Decode
 
 
 apiEndPoint = "http://localhost:8001"
@@ -22,19 +23,33 @@ main =
 
 type alias Model =
   { masterKey : String
-  , library : String
+  , libraryData : Maybe LibraryData
+  , error : Maybe String
   }
 
 
+type alias Library =
+  { blob : String
+  , libraryVersion : Int
+  , apiVersion : Int
+  , modified : Int
+  }
+
+
+type alias LibraryData =
+  { library : Library
+  , hmac : String
+  }
+
 init : (Model, Cmd Msg)
 init =
-  (Model "" "", Cmd.none)
+  (Model "" Nothing Nothing, Cmd.none)
 
 
 type Msg
   = NoOp
   | DownloadLibrary
-  | NewLibrary (Result Http.Error String)
+  | NewLibrary (Result Http.Error LibraryData)
   | SetMasterKey String
 
 
@@ -45,13 +60,13 @@ update msg model =
       (model, Cmd.none)
 
     DownloadLibrary ->
-      (model, downloadLibrary)
+      ({ model | error = Nothing }, downloadLibrary)
 
-    NewLibrary (Ok newLibrary) ->
-      ({ model | library = newLibrary }, Cmd.none)
+    NewLibrary (Ok newLibraryData) ->
+      ({ model | libraryData = Just newLibraryData }, Cmd.none)
 
     NewLibrary (Err _) ->
-      (model, Cmd.none)
+      ({ model | error = Just "Fetching library failed" }, Cmd.none)
 
     SetMasterKey newMasterKey ->
       ({ model | masterKey = newMasterKey }, Cmd.none)
@@ -59,7 +74,20 @@ update msg model =
 
 downloadLibrary : Cmd Msg
 downloadLibrary =
-  Http.send NewLibrary (Http.getString apiEndPoint)
+  Http.send NewLibrary (Http.get apiEndPoint decodeLibraryData)
+
+
+-- decodeResponse : Decode.Decoder Library
+-- decodeResponse =
+--   Decode.at ["hmac"] Decode.string
+
+
+decodeLibraryData =
+  Decode.map2 LibraryData (Decode.field "library" decodeLibrary) (Decode.field "hmac" Decode.string)
+
+
+decodeLibrary =
+  Decode.map4 Library (Decode.field "blob" Decode.string) (Decode.field "library_version" Decode.int) (Decode.field "api_version" Decode.int) (Decode.field "modified" Decode.int)
 
 
 view : Model -> Html Msg
@@ -78,7 +106,8 @@ viewUnAuthSection model =
        [ h1 [] [ text "Online Password Manager" ]
        , viewLoginForm model
        , p [] [ text model.masterKey ]
-       , p [] [ text model.library ]
+       , hr [] []
+       , viewError model.error
        ]
     ]
 
@@ -90,3 +119,13 @@ viewLoginForm model =
     [ input [ placeholder "master key", onInput SetMasterKey ] []
     , button [ onClick DownloadLibrary ] [ text "Decrypt" ]
     ]
+
+
+viewError : Maybe String -> Html Msg
+viewError error =
+  case error of
+    Just message ->
+      p [] [ text message ]
+
+    Nothing ->
+      text ""
