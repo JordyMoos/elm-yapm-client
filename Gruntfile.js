@@ -112,6 +112,14 @@ module.exports = function(grunt) {
                 src: 'config.json',
                 dest: 'build/js/config.js'
             }
+        },
+
+        elm: {
+            compile: {
+                files: {
+                    'build/js/elm.js': 'src/*.elm'
+                }
+            }
         }
     });
 
@@ -141,6 +149,7 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-htmlmin');
     grunt.loadNpmTasks('grunt-manifest');
     grunt.loadNpmTasks('grunt-global-config');
+    grunt.loadNpmTasks('grunt-elm');
 
     // Default task(s).
     grunt.registerTask('default', [
@@ -150,6 +159,7 @@ module.exports = function(grunt) {
         'load-js-modules',
         'es6transpiler',
         'uglify',
+        'elm',
         'uncss',
         'processhtml',
         'inline',

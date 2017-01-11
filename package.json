@@ -13,6 +13,7 @@
     "grunt-contrib-htmlmin": "^0.4.0",
     "grunt-contrib-uglify": "^0.9.1",
     "grunt-contrib-watch": "^0.6.1",
+    "grunt-elm": "^1.4.0",
     "grunt-es6-transpiler": "^1.0.2",
     "grunt-global-config": "^0.1.0",
     "grunt-inline-alt": "^0.3.4",
