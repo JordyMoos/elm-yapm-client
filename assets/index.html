@@ -24,9 +24,14 @@
     <div id="main"></div>
     <script>
       var app = Elm.Main.fullscreen();
-      app.ports.parseLibraryData.subscribe(function (libraryData) {
-        console.log(libraryData);
-        var promise = window.yapm.createCryptoManager("changeme", libraryData);
+      app.ports.parseLibraryData.subscribe(function (request) {
+        console.log('In parse library data');
+        console.log(arguments);
+
+        var promise = window.yapm.createCryptoManager(
+          request.masterKey,
+          request.libraryData
+        );
         console.log(promise);
 
         promise.getPasswordList()
@@ -35,9 +40,20 @@
             console.log(arguments);
             console.log(passwordList);
           })
-          .catch(function () {
+          .catch(function (error) {
+            var errorMsg = 'Unknown error';
+            if (typeof(error) === 'string') {
+              errorMsg = error;
+            } else if (typeof(error) === 'object') {
+              if (error.message && typeof(error.message) === 'string') {
+                errorMsg = error.message;
+              }
+            }
             console.log('Get password list catch');
             console.log(arguments);
+            console.log('Error: ' + errorMsg);
+
+            app.ports.error.send(errorMsg);
           });
       });
     </script>

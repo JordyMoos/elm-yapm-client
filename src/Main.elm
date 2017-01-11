@@ -17,7 +17,7 @@ main =
     { init = init
     , view = view
     , update = update
-    , subscriptions = \_ -> Sub.none
+    , subscriptions = subscriptions
     }
 
 
@@ -43,6 +43,13 @@ type alias LibraryData =
   , hmac : String
   }
 
+
+type alias ParseLibraryDataContent =
+  { masterKey : Maybe String
+  , libraryData : Maybe LibraryData
+  }
+
+
 initModel : Model
 initModel =
   Model "" Nothing False Nothing Nothing
@@ -63,6 +70,8 @@ type Msg
   | NewLibrary (Result Http.Error LibraryData)
   | SetMasterKeyInput String
   | SubmitAuthForm
+  | SetError String
+  | ClearError
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -84,11 +93,25 @@ update msg model =
       let
         masterKey = Just model.masterKeyInput
         masterKeyInput = ""
+        newModel = { model | masterKey = masterKey, masterKeyInput = masterKeyInput}
       in
-        ({ model | masterKey = masterKey, masterKeyInput = masterKeyInput}, Cmd.none)
+        ( newModel, decryptLibraryIfPossibleCmd newModel )
+
+    SetError error ->
+      ({ model | error = Just error }, Cmd.none )
+
+    ClearError ->
+      ({ model | error = Nothing }, Cmd.none )
 
 
-port parseLibraryData : LibraryData -> Cmd msg
+port parseLibraryData : ParseLibraryDataContent -> Cmd msg
+
+port error : (String -> msg) -> Sub msg
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+  Sub.batch [ error SetError ]
 
 
 downloadLibraryCmd : Cmd Msg
@@ -109,6 +132,37 @@ decodeLibrary =
   Decode.map4 Library (Decode.field "blob" Decode.string) (Decode.field "library_version" Decode.int) (Decode.field "api_version" Decode.int) (Decode.field "modified" Decode.int)
 
 
+decryptLibraryIfPossibleCmd : Model -> Cmd Msg
+decryptLibraryIfPossibleCmd model =
+  if areDecryptRequirementsSet model then
+    parseLibraryData (ParseLibraryDataContent model.masterKey model.libraryData)
+  else
+    Cmd.none
+
+
+areDecryptRequirementsSet : Model -> Bool
+areDecryptRequirementsSet model =
+  let
+    unMetRequirements = [ maybeIsNothing model.masterKey, maybeIsNothing model.libraryData ]
+      |> List.filter (\value -> value)
+  in
+    List.length unMetRequirements == 0
+
+
+maybeIsNothing : Maybe a -> Bool
+maybeIsNothing maybe =
+  case maybe of
+    Nothing ->
+      True
+    Just _ ->
+      False
+
+
+maybeHasValue : Maybe a -> Bool
+maybeHasValue maybe =
+  not (maybeIsNothing maybe)
+
+
 view : Model -> Html Msg
 view model =
   div
@@ -126,7 +180,7 @@ viewUnAuthSection model =
        , viewLoginForm model
        , p [] [ text model.masterKeyInput ]
        , hr [] []
-       , p [] [ text (Maybe.withDefault "" model.masterKey) ]
+       , p [] [ text (Maybe.withDefault "[Nothing]" model.masterKey) ]
        , hr [] []
        , viewLibraryData model.libraryData
        , hr [] []
@@ -156,4 +210,14 @@ viewLibraryData libraryData =
 
 viewError : Maybe String -> Html Msg
 viewError error =
-  text (Maybe.withDefault "" error)
+  case error of
+    Just message ->
+      div []
+        [ text "Error: "
+        , text message
+        , text " "
+        , button [ onClick ClearError ] [ text "[x]" ]
+        ]
+
+    Nothing ->
+      text "[No Error]"
