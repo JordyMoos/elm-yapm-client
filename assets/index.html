@@ -24,6 +24,21 @@
     <div id="main"></div>
     <script>
       var app = Elm.Main.fullscreen();
+      app.ports.parseLibraryData.subscribe(function (libraryData) {
+        console.log(libraryData);
+        var promise = window.yapm.createCryptoManager("", libraryData);
+        console.log(promise);
+
+        promise.getPasswordList()
+          .then(function () {
+            console.log('Get password list then');
+            console.log(arguments);
+          })
+          .catch(function () {
+            console.log('Get password list catch');
+            console.log(arguments);
+          });
+      });
     </script>
 </body>
 

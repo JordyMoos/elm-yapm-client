@@ -1,4 +1,4 @@
-module Main exposing (..)
+port module Main exposing (..)
 
 import Basics exposing (..)
 import Html exposing (..)
@@ -37,7 +37,7 @@ type alias Library =
 
 
 type alias LibraryData =
-  { libraryJson : String
+  { library : String
   , hmac : String
   }
 
@@ -63,13 +63,16 @@ update msg model =
       ({ model | error = Nothing }, downloadLibrary)
 
     NewLibrary (Ok newLibraryData) ->
-      ({ model | libraryData = Just newLibraryData }, Cmd.none)
+      ({ model | libraryData = Just newLibraryData }, parseLibraryData newLibraryData)
 
     NewLibrary (Err _) ->
       ({ model | error = Just "Fetching library failed" }, Cmd.none)
 
     SetMasterKey newMasterKey ->
       ({ model | masterKey = newMasterKey }, Cmd.none)
+
+
+port parseLibraryData : LibraryData -> Cmd msg
 
 
 downloadLibrary : Cmd Msg
@@ -127,7 +130,7 @@ viewLibraryData : Maybe LibraryData -> Html Msg
 viewLibraryData libraryData =
   case libraryData of
     Just data ->
-      p [] [ text data.libraryJson ]
+      p [] [ text data.library ]
 
     Nothing ->
       text ""
