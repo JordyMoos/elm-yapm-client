@@ -26,13 +26,14 @@
       var app = Elm.Main.fullscreen();
       app.ports.parseLibraryData.subscribe(function (libraryData) {
         console.log(libraryData);
-        var promise = window.yapm.createCryptoManager("", libraryData);
+        var promise = window.yapm.createCryptoManager("changeme", libraryData);
         console.log(promise);
 
         promise.getPasswordList()
-          .then(function () {
+          .then(function (passwordList) {
             console.log('Get password list then');
             console.log(arguments);
+            console.log(passwordList);
           })
           .catch(function () {
             console.log('Get password list catch');
