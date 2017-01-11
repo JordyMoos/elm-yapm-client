@@ -40,7 +40,8 @@ module.exports = function(grunt) {
         uglify: {
             dist: {
                 files: {
-                    'build/js/manager.min.js': ['build/js/manager-es5.js']
+                    'build/js/manager.min.js': ['build/js/manager-es5.js'],
+                    'build/js/elm.min.js': ['build/js/elm.js'],
                 }
             }
         },
@@ -158,8 +159,8 @@ module.exports = function(grunt) {
         'config',
         'load-js-modules',
         'es6transpiler',
-        'uglify',
         'elm',
+        'uglify',
         'uncss',
         'processhtml',
         'inline',
