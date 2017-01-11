@@ -22,7 +22,9 @@ main =
 
 
 type alias Model =
-  { masterKey : String
+  { masterKeyInput : String
+  , masterKey : Maybe String
+  , isDownloading : Bool
   , libraryData : Maybe LibraryData
   , error : Maybe String
   }
@@ -41,37 +43,33 @@ type alias LibraryData =
   , hmac : String
   }
 
-
-type DownloadStatus
-  = Requesting
-  , Failed
-  , Success
+initModel : Model
+initModel =
+  Model "" Nothing False Nothing Nothing
 
 
 init : (Model, Cmd Msg)
 init =
-  (Model "" Nothing Nothing, downloadLibrary)
+  doDownloadLibrary initModel
+
+
+doDownloadLibrary : Model -> (Model, Cmd Msg)
+doDownloadLibrary model =
+  ({ model | isDownloading = True }, downloadLibraryCmd)
 
 
 type Msg
-  = NoOp
-  | SubmitAuthForm
-  | DownloadLibrary
+  = DownloadLibrary
   | NewLibrary (Result Http.Error LibraryData)
-  | SetMasterKey String
+  | SetMasterKeyInput String
+  | SubmitAuthForm
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
-    NoOp ->
-      (model, Cmd.none)
-
-    SubmitAuthForm ->
-      (model, Cmd.none)
-
     DownloadLibrary ->
-      ({ model | error = Nothing }, downloadLibrary)
+      (model, downloadLibraryCmd)
 
     NewLibrary (Ok newLibraryData) ->
       ({ model | libraryData = Just newLibraryData }, Cmd.none)
@@ -79,15 +77,22 @@ update msg model =
     NewLibrary (Err _) ->
       ({ model | error = Just "Fetching library failed" }, Cmd.none)
 
-    SetMasterKey newMasterKey ->
-      ({ model | masterKey = newMasterKey }, Cmd.none)
+    SetMasterKeyInput masterKeyInput ->
+      ({ model | masterKeyInput = masterKeyInput }, Cmd.none)
+
+    SubmitAuthForm ->
+      let
+        masterKey = Just model.masterKeyInput
+        masterKeyInput = ""
+      in
+        ({ model | masterKey = masterKey, masterKeyInput = masterKeyInput}, Cmd.none)
 
 
 port parseLibraryData : LibraryData -> Cmd msg
 
 
-downloadLibrary : Cmd Msg
-downloadLibrary =
+downloadLibraryCmd : Cmd Msg
+downloadLibraryCmd =
   Http.send NewLibrary (Http.get apiEndPoint decodeLibraryData)
 
 
@@ -119,7 +124,9 @@ viewUnAuthSection model =
        []
        [ h1 [] [ text "Online Password Manager" ]
        , viewLoginForm model
-       , p [] [ text model.masterKey ]
+       , p [] [ text model.masterKeyInput ]
+       , hr [] []
+       , p [] [ text (Maybe.withDefault "" model.masterKey) ]
        , hr [] []
        , viewLibraryData model.libraryData
        , hr [] []
@@ -132,7 +139,7 @@ viewLoginForm : Model -> Html Msg
 viewLoginForm model =
   div
     []
-    [ input [ placeholder "master key", onInput SetMasterKey ] []
+    [ input [ placeholder "master key", onInput SetMasterKeyInput, value model.masterKeyInput ] []
     , button [ onClick SubmitAuthForm ] [ text "Decrypt" ]
     ]
 
@@ -149,9 +156,4 @@ viewLibraryData libraryData =
 
 viewError : Maybe String -> Html Msg
 viewError error =
-  case error of
-    Just message ->
-      p [] [ text message ]
-
-    Nothing ->
-      text ""
+  text (Maybe.withDefault "" error)
