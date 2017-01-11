@@ -41,13 +41,21 @@ type alias LibraryData =
   , hmac : String
   }
 
+
+type DownloadStatus
+  = Requesting
+  , Failed
+  , Success
+
+
 init : (Model, Cmd Msg)
 init =
-  (Model "" Nothing Nothing, Cmd.none)
+  (Model "" Nothing Nothing, downloadLibrary)
 
 
 type Msg
   = NoOp
+  | SubmitAuthForm
   | DownloadLibrary
   | NewLibrary (Result Http.Error LibraryData)
   | SetMasterKey String
@@ -59,11 +67,14 @@ update msg model =
     NoOp ->
       (model, Cmd.none)
 
+    SubmitAuthForm ->
+      (model, Cmd.none)
+
     DownloadLibrary ->
       ({ model | error = Nothing }, downloadLibrary)
 
     NewLibrary (Ok newLibraryData) ->
-      ({ model | libraryData = Just newLibraryData }, parseLibraryData newLibraryData)
+      ({ model | libraryData = Just newLibraryData }, Cmd.none)
 
     NewLibrary (Err _) ->
       ({ model | error = Just "Fetching library failed" }, Cmd.none)
@@ -122,7 +133,7 @@ viewLoginForm model =
   div
     []
     [ input [ placeholder "master key", onInput SetMasterKey ] []
-    , button [ onClick DownloadLibrary ] [ text "Decrypt" ]
+    , button [ onClick SubmitAuthForm ] [ text "Decrypt" ]
     ]
 
 
