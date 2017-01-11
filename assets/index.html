@@ -35,10 +35,12 @@
         console.log(promise);
 
         promise.getPasswordList()
-          .then(function (passwordList) {
+          .then(function (passwords) {
             console.log('Get password list then');
             console.log(arguments);
-            console.log(passwordList);
+            console.log(passwords);
+
+            app.ports.passwords.send(passwords);
           })
           .catch(function (error) {
             var errorMsg = 'Unknown error';

@@ -27,6 +27,7 @@ type alias Model =
   , isDownloading : Bool
   , libraryData : Maybe LibraryData
   , error : Maybe String
+  , passwords : List Password
   }
 
 
@@ -50,9 +51,18 @@ type alias ParseLibraryDataContent =
   }
 
 
+type alias Password =
+  { comment : String
+  , password : String
+  , title : String
+  , url : String
+  , username : String
+  }
+
+
 initModel : Model
 initModel =
-  Model "" Nothing False Nothing Nothing
+  Model "" Nothing False Nothing Nothing []
 
 
 init : (Model, Cmd Msg)
@@ -72,6 +82,7 @@ type Msg
   | SubmitAuthForm
   | SetError String
   | ClearError
+  | SetPasswords (List Password)
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -103,15 +114,23 @@ update msg model =
     ClearError ->
       ({ model | error = Nothing }, Cmd.none )
 
+    SetPasswords passwords ->
+      ({ model | passwords = passwords }, Cmd.none )
+
 
 port parseLibraryData : ParseLibraryDataContent -> Cmd msg
 
 port error : (String -> msg) -> Sub msg
 
+port passwords : (List Password -> msg) -> Sub msg
+
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  Sub.batch [ error SetError ]
+  Sub.batch
+    [ error SetError
+    , passwords SetPasswords
+    ]
 
 
 downloadLibraryCmd : Cmd Msg
@@ -185,6 +204,8 @@ viewUnAuthSection model =
        , viewLibraryData model.libraryData
        , hr [] []
        , viewError model.error
+       , hr [] []
+       , viewPasswords model.passwords
        ]
     ]
 
@@ -221,3 +242,13 @@ viewError error =
 
     Nothing ->
       text "[No Error]"
+
+
+viewPasswords : List Password -> Html Msg
+viewPasswords passwords =
+  div [] (List.map viewPassword passwords)
+
+
+viewPassword : Password -> Html Msg
+viewPassword password =
+  p [] [ text (password.title ++ " - " ++ password.username) ]
