@@ -12,16 +12,13 @@
     <script src="js/elm.js" type="application/javascript"></script>
     <!-- /build -->
 
-    <!-- build:css css/tidy.css -->
     <link rel="stylesheet" type="text/css" href="css/style.css" />
     <link rel="stylesheet" type="text/css" href="css/bootstrap.css" />
     <link rel="stylesheet" type="text/css" href="css/yapm.css" />
-    <!-- /build -->
 
 </head>
 
 <body>
-    <div id="main"></div>
     <script>
       var app = Elm.Main.fullscreen();
       app.ports.parseLibraryData.subscribe(function (request) {

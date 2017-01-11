@@ -161,7 +161,7 @@ module.exports = function(grunt) {
         'es6transpiler',
         'elm',
         'uglify',
-        'uncss',
+        // 'uncss',
         'processhtml',
         'inline',
         'htmlmin',

@@ -192,9 +192,9 @@ view model =
 viewUnAuthSection : Model -> Html Msg
 viewUnAuthSection model =
   section
-    []
+    [ id "unauthorized" ]
     [ div
-       []
+       [ id "welcome" ]
        [ h1 [] [ text "Online Password Manager" ]
        , viewLoginForm model
        , p [] [ text model.masterKeyInput ]
