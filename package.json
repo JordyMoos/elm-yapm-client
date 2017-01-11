@@ -18,7 +18,6 @@
     "grunt-global-config": "^0.1.0",
     "grunt-inline-alt": "^0.3.4",
     "grunt-manifest": "^0.4.0",
-    "grunt-processhtml": "^0.3.7",
-    "grunt-uncss": "^0.4.2"
+    "grunt-processhtml": "^0.3.7"
   }
 }

@@ -27,7 +27,7 @@ type alias Model =
   , isDownloading : Bool
   , libraryData : Maybe LibraryData
   , error : Maybe String
-  , passwords : List Password
+  , passwords : Maybe (List Password)
   }
 
 
@@ -62,7 +62,7 @@ type alias Password =
 
 initModel : Model
 initModel =
-  Model "" Nothing False Nothing Nothing []
+  Model "" Nothing False Nothing Nothing Nothing
 
 
 init : (Model, Cmd Msg)
@@ -115,7 +115,7 @@ update msg model =
       ({ model | error = Nothing }, Cmd.none )
 
     SetPasswords passwords ->
-      ({ model | passwords = passwords }, Cmd.none )
+      ({ model | passwords = Just passwords }, Cmd.none )
 
 
 port parseLibraryData : ParseLibraryDataContent -> Cmd msg
@@ -184,9 +184,12 @@ maybeHasValue maybe =
 
 view : Model -> Html Msg
 view model =
-  div
-    []
-    [ viewUnAuthSection model ]
+  case model.passwords of
+    Nothing ->
+      viewUnAuthSection model
+
+    Just _ ->
+      viewManager model
 
 
 viewUnAuthSection : Model -> Html Msg
@@ -244,9 +247,19 @@ viewError error =
       text "[No Error]"
 
 
-viewPasswords : List Password -> Html Msg
+viewManager : Model -> Html Msg
+viewManager model =
+  viewPasswords model.passwords
+
+
+viewPasswords : Maybe (List Password) -> Html Msg
 viewPasswords passwords =
-  div [] (List.map viewPassword passwords)
+  case passwords of
+    Just passwords ->
+      div [] (List.map viewPassword passwords)
+
+    Nothing ->
+      text ""
 
 
 viewPassword : Password -> Html Msg

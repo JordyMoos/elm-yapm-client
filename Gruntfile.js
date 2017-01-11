@@ -13,14 +13,6 @@ module.exports = function(grunt) {
             }
         },
 
-        uncss: {
-            dist: {
-                files: {
-                    'build/css/tidy.css': ['build/index.html']
-                }
-            }
-        },
-
         processhtml: {
             dist: {
                 files: {
@@ -142,7 +134,6 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-clean');
     grunt.loadNpmTasks('grunt-contrib-copy');
     grunt.loadNpmTasks('grunt-contrib-watch');
-    grunt.loadNpmTasks('grunt-uncss');
     grunt.loadNpmTasks('grunt-inline-alt');
     grunt.loadNpmTasks('grunt-processhtml');
     grunt.loadNpmTasks('grunt-es6-transpiler');
@@ -161,7 +152,6 @@ module.exports = function(grunt) {
         'es6transpiler',
         'elm',
         'uglify',
-        // 'uncss',
         'processhtml',
         'inline',
         'htmlmin',
