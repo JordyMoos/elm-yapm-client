@@ -83,6 +83,7 @@ type Msg
   | SetError String
   | ClearError
   | SetPasswords (List Password)
+  | Logout
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -116,6 +117,9 @@ update msg model =
 
     SetPasswords passwords ->
       ({ model | passwords = Just passwords }, Cmd.none )
+
+    Logout ->
+      ({ model | passwords = Nothing, masterKey = Nothing }, Cmd.none )
 
 
 port parseLibraryData : ParseLibraryDataContent -> Cmd msg
@@ -249,7 +253,11 @@ viewError error =
 
 viewManager : Model -> Html Msg
 viewManager model =
-  viewPasswords model.passwords
+  div
+    []
+    [ button [ onClick Logout ] [ text "Logout" ]
+    , viewPasswords model.passwords
+    ]
 
 
 viewPasswords : Maybe (List Password) -> Html Msg
