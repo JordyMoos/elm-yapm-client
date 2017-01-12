@@ -252,8 +252,48 @@ viewError error =
 
 viewManager : Model -> Html Msg
 viewManager model =
-  div
-    []
+  section [ id "authorized" ]
+    [ viewNavBar model
+    , viewPasswordTable model
+    ]
+
+
+viewNavBar : Model -> Html Msg
+viewNavBar model =
+  nav [ class "navbar navbar-default navbar-fixed-top", attribute "role" "navigation" ]
+    [ div [ class "navbar-header" ]
+        [ a [ class "navbar-brand" ]
+            [ text "Passwords" ] ]
+    , div [ class "navbar" ]
+        [ div [ class "navbar-form navbar-right", attribute "role" "form" ]
+            [ div [ class "form-group" ]
+                [ input [ id "filter", placeholder "Filter... <CTRL+E>", class "flter-control" ] [] ]
+            , text " "
+            , button [ class "newPassword btn" ]
+                [ i [ class "icon-plus" ] []
+                , text " New Password"
+                ]
+            , button [ class "newMasterKey btn" ]
+                [ i [ class "icon-wrench" ] []
+                , text " Change Master Key"
+                ]
+            , button [ class "logout btn", onClick Logout ]
+                [ i [ class "icon-lock-open" ] []
+                , text " Logout"
+                ]
+            ]
+        ]
+    ]
+
+
+viewPasswordTable : Model -> Html Msg
+viewPasswordTable model =
+  text ""
+
+
+viewManagerDump : Model -> Html Msg
+viewManagerDump model =
+  div []
     [ button [ onClick Logout ] [ text "Logout" ]
     , viewPasswords model.passwords
     ]
