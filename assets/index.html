@@ -22,8 +22,6 @@
     <script>
       var app = Elm.Main.fullscreen();
       app.ports.parseLibraryData.subscribe(function (request) {
-        console.log('PARSE LIBRARY');
-        console.log(request);
         var promise = window.yapm.createCryptoManager(
           request.masterKey,
           request.libraryData
