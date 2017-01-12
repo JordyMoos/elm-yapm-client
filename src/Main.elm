@@ -210,14 +210,18 @@ viewUnAuthSection model =
 
 viewLoginForm : Model -> Html Msg
 viewLoginForm model =
-  Html.form
-    [ onSubmit SubmitAuthForm, class "well form-inline", id "decrypt" ]
-    [ input [ placeholder "master key", onInput SetMasterKeyInput, value model.masterKeyInput, class "form-control", id "encryptionKey" ] []
-    , button
-        [ onClick SubmitAuthForm, class "btn" ]
-        [ i [ class "icon-lock-open" ] []
-        , text " Decrypt"
+  div
+    []
+    [ Html.form
+        [ onSubmit SubmitAuthForm, class "well form-inline", id "decrypt" ]
+        [ input [ placeholder "master key", onInput SetMasterKeyInput, value model.masterKeyInput, class "form-control", id "encryptionKey" ] []
+        , button
+            [ onClick SubmitAuthForm, class "btn" ]
+            [ i [ class "icon-lock-open" ] []
+            , text " Decrypt"
+            ]
         ]
+    , viewError model.error
     ]
 
 
@@ -243,7 +247,7 @@ viewError error =
         ]
 
     Nothing ->
-      text "[No Error]"
+      div [] [ text "[No Error]" ]
 
 
 viewManager : Model -> Html Msg

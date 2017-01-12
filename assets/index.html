@@ -22,21 +22,13 @@
     <script>
       var app = Elm.Main.fullscreen();
       app.ports.parseLibraryData.subscribe(function (request) {
-        console.log('In parse library data');
-        console.log(arguments);
-
         var promise = window.yapm.createCryptoManager(
           request.masterKey,
           request.libraryData
         );
-        console.log(promise);
 
         promise.getPasswordList()
           .then(function (passwords) {
-            console.log('Get password list then');
-            console.log(arguments);
-            console.log(passwords);
-
             app.ports.passwords.send(passwords);
           })
           .catch(function (error) {
@@ -48,10 +40,7 @@
                 errorMsg = error.message;
               }
             }
-            console.log('Get password list catch');
-            console.log(arguments);
-            console.log('Error: ' + errorMsg);
-
+            
             app.ports.error.send(errorMsg);
           });
       });
