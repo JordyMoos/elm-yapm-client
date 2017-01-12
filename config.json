@@ -1,5 +1,5 @@
 {
-  "apiEndPoint": "https://marcusklaas.nl/passwords-api/",
+  "apiEndPoint": "http://localhost:8001",
   "localStorageKey": "password-library",
   "maxIdleTime": 20
 }

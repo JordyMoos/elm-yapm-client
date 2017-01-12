@@ -20,7 +20,7 @@
 
 <body>
     <script>
-      var app = Elm.Main.fullscreen();
+      var app = Elm.Main.fullscreen(window.yapm.config);
       app.ports.parseLibraryData.subscribe(function (request) {
         var promise = window.yapm.createCryptoManager(
           request.masterKey,

@@ -11,12 +11,9 @@ import Dom
 import Task
 
 
-apiEndPoint = "http://localhost:8001"
-
-
-main : Program Never Model Msg
+main : Program Flags Model Msg
 main =
-  Html.program
+  Html.programWithFlags
     { init = init
     , view = view
     , update = update
@@ -24,8 +21,16 @@ main =
     }
 
 
+type alias Flags =
+  { apiEndPoint : String
+  , localStorageKey : String
+  , maxIdleTime : Int
+  }
+
+
 type alias Model =
-  { masterKeyInput : String
+  { config : Flags
+  , masterKeyInput : String
   , masterKey : Maybe String
   , isDownloading : Bool
   , libraryData : Maybe LibraryData
@@ -70,14 +75,22 @@ type Modal
   | NewMasterKey
 
 
-initModel : Model
-initModel =
-  Model "" Nothing False Nothing Nothing Nothing Nothing
+initModel : Flags -> Model
+initModel flags =
+  { config = flags
+  , masterKeyInput = ""
+  , masterKey = Nothing
+  , isDownloading = False
+  , libraryData = Nothing
+  , error = Nothing
+  , passwords = Nothing
+  , modal = Nothing
+  }
 
 
-init : (Model, Cmd Msg)
-init =
-  initModel ! []
+init : Flags -> (Model, Cmd Msg)
+init flags =
+  initModel flags ! []
     |> focusMasterKeyInput
     |> doDownloadLibrary
 
@@ -92,7 +105,10 @@ focusMasterKeyInput (model, cmd) =
 
 doDownloadLibrary : (Model, Cmd Msg) -> (Model, Cmd Msg)
 doDownloadLibrary (model, cmd) =
-  { model | isDownloading = True } ! [ cmd, downloadLibraryCmd ]
+  { model | isDownloading = True } !
+    [ cmd
+    , downloadLibraryCmd model.config.apiEndPoint
+    ]
 
 
 type Msg
@@ -117,7 +133,7 @@ update msg model =
       model ! []
 
     DownloadLibrary ->
-      model ! [ downloadLibraryCmd ]
+      model ! [ downloadLibraryCmd model.config.apiEndPoint ]
 
     NewLibrary (Ok newLibraryData) ->
       let
@@ -176,8 +192,8 @@ subscriptions model =
     ]
 
 
-downloadLibraryCmd : Cmd Msg
-downloadLibraryCmd =
+downloadLibraryCmd : String -> Cmd Msg
+downloadLibraryCmd apiEndPoint =
   Http.send NewLibrary (Http.get apiEndPoint decodeLibraryData)
 
 
