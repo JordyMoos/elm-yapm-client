@@ -7,6 +7,8 @@ import Html.Events exposing (..)
 import Http
 import Json.Decode as Decode
 import Maybe.Extra exposing (isNothing)
+import Dom
+import Task
 
 
 apiEndPoint = "http://localhost:8001"
@@ -75,16 +77,27 @@ initModel =
 
 init : (Model, Cmd Msg)
 init =
-  doDownloadLibrary initModel
+  initModel ! []
+    |> focusMasterKeyInput
+    |> doDownloadLibrary
 
 
-doDownloadLibrary : Model -> (Model, Cmd Msg)
-doDownloadLibrary model =
-  ({ model | isDownloading = True }, downloadLibraryCmd)
+focusMasterKeyInput : (Model, Cmd Msg) -> (Model, Cmd Msg)
+focusMasterKeyInput (model, cmd) =
+  model !
+    [ cmd
+    , Task.attempt (\_ -> NoOp) <| Dom.focus "encryptionKey"
+    ]
+
+
+doDownloadLibrary : (Model, Cmd Msg) -> (Model, Cmd Msg)
+doDownloadLibrary (model, cmd) =
+  { model | isDownloading = True } ! [ cmd, downloadLibraryCmd ]
 
 
 type Msg
-  = DownloadLibrary
+  = NoOp
+  | DownloadLibrary
   | NewLibrary (Result Http.Error LibraryData)
   | SetMasterKeyInput String
   | SubmitAuthForm
@@ -100,6 +113,9 @@ type Msg
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
+    NoOp ->
+      model ! []
+
     DownloadLibrary ->
       (model, downloadLibraryCmd)
 
