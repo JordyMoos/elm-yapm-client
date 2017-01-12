@@ -69,7 +69,7 @@ h1 {
     padding-right: 50px;
 }
 
-#editModal, #masterkeyModal {
+#modal {
     z-index: 11;
     display: block;
     background-color: rgba(0, 0, 0, 0.5);

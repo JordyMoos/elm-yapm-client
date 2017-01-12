@@ -65,7 +65,7 @@ type alias Password =
 type Modal
   = EditPassword
   | NewPassword
-  | EditMasterKey
+  | NewMasterKey
 
 
 initModel : Model
@@ -93,6 +93,7 @@ type Msg
   | SetPasswords (List Password)
   | Logout
   | ShowNewPasswordModal
+  | ShowNewMasterKeyModal
   | CloseModal
 
 
@@ -136,6 +137,9 @@ update msg model =
 
     ShowNewPasswordModal ->
       ({ model | modal = Just NewPassword }, Cmd.none )
+
+    ShowNewMasterKeyModal ->
+      ({ model | modal = Just NewMasterKey }, Cmd.none )
 
     CloseModal ->
       ({ model | modal = Nothing }, Cmd.none )
@@ -270,7 +274,7 @@ viewNavBar model =
                 [ i [ class "icon-plus" ] []
                 , text " New Password"
                 ]
-            , button [ class "newMasterKey btn" ]
+            , button [ class "newMasterKey btn", onClick ShowNewMasterKeyModal ]
                 [ i [ class "icon-wrench" ] []
                 , text " Change Master Key"
                 ]
@@ -352,8 +356,8 @@ viewModal model =
     Just NewPassword ->
       viewNewPasswordModal model
 
-    Just EditMasterKey ->
-      text "Edit master key"
+    Just NewMasterKey ->
+      viewNewMasterKeyModal model
 
     Nothing ->
       text "[No modal]"
@@ -361,16 +365,16 @@ viewModal model =
 
 viewNewPasswordModal : Model -> Html Msg
 viewNewPasswordModal model =
-  div [ class "modal visible-modal", id "editModal" ]
+  div [ class "modal visible-modal", id "modal" ]
     [ div [ class "modal-dialog" ]
         [ div [ class "modal-content" ]
             [ div [ class "modal-header" ]
                 [ button [ class "close", onClick CloseModal, attribute "aria-hidden" "true", id "modalClose1" ]
                     [ text "x" ]
                 , h4 [ class "modal-title", id "modalHeader" ]
-                    [ text "New password" ]
+                    [ text "New Password" ]
                 ]
-            , viewNewPasswordModalForm model
+            , viewNewPasswordForm model
             , div [ class "modal-footer" ]
                 [ a [ class "btn btn-default" ]
                     [ i [ class "icon-shuffle" ] []
@@ -386,8 +390,8 @@ viewNewPasswordModal model =
     ]
 
 
-viewNewPasswordModalForm : Model -> Html Msg
-viewNewPasswordModalForm model =
+viewNewPasswordForm : Model -> Html Msg
+viewNewPasswordForm model =
   Html.form [ class "modal-body form-horizontal" ]
     [ viewFormInput "title" "Title" "text"
     , viewFormInput "URL" "URL" "text"
@@ -395,6 +399,37 @@ viewNewPasswordModalForm model =
     , viewFormInput "pass" "Password" "password"
     , viewFormInput "passRepeat" "Password Repeat" "password"
     , viewFormTextarea "comment" "Comment"
+    ]
+
+
+viewNewMasterKeyModal : Model -> Html Msg
+viewNewMasterKeyModal model =
+  div [ class "modal visible-modal", id "modal" ]
+    [ div [ class "modal-dialog" ]
+        [ div [ class "modal-content" ]
+            [ div [ class "modal-header" ]
+                [ button [ class "close", onClick CloseModal, attribute "aria-hidden" "true" ]
+                    [ text "x" ]
+                , h4 [ class "modal-title", id "modalHeader" ]
+                    [ text "New Master Key" ]
+                ]
+            , viewNewMasterKeyForm model
+            , div [ class "modal-footer" ]
+                [ a [ class "btn btn-primary" ]
+                    [ i [ class "icon-attention" ] []
+                    , text "Save"
+                    ]
+                ]
+            ]
+        ]
+    ]
+
+
+viewNewMasterKeyForm : Model -> Html Msg
+viewNewMasterKeyForm model =
+  Html.form [ class "modal-body form-horizontal" ]
+    [ viewFormInput "key" "New Master Key" "password"
+    , viewFormInput "keyRepeat" "Master Key Repeat" "password"
     ]
 
 
