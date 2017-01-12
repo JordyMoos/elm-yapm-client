@@ -29,6 +29,7 @@ type alias Model =
   , libraryData : Maybe LibraryData
   , error : Maybe String
   , passwords : Maybe (List Password)
+  , modal : Maybe Modal
   }
 
 
@@ -61,9 +62,15 @@ type alias Password =
   }
 
 
+type Modal
+  = EditPassword
+  | NewPassword
+  | EditMasterKey
+
+
 initModel : Model
 initModel =
-  Model "" Nothing False Nothing Nothing Nothing
+  Model "" Nothing False Nothing Nothing Nothing Nothing
 
 
 init : (Model, Cmd Msg)
@@ -85,6 +92,8 @@ type Msg
   | ClearError
   | SetPasswords (List Password)
   | Logout
+  | ShowNewPasswordModal
+  | CloseModal
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -94,7 +103,10 @@ update msg model =
       (model, downloadLibraryCmd)
 
     NewLibrary (Ok newLibraryData) ->
-      ({ model | libraryData = Just newLibraryData }, Cmd.none)
+      let
+        newModel = { model | libraryData = Just newLibraryData }
+      in
+        ( newModel, decryptLibraryIfPossibleCmd newModel )
 
     NewLibrary (Err _) ->
       ({ model | error = Just "Fetching library failed" }, Cmd.none)
@@ -106,7 +118,7 @@ update msg model =
       let
         masterKey = Just model.masterKeyInput
         masterKeyInput = ""
-        newModel = { model | masterKey = masterKey, masterKeyInput = masterKeyInput}
+        newModel = { model | masterKey = masterKey, masterKeyInput = masterKeyInput }
       in
         ( newModel, decryptLibraryIfPossibleCmd newModel )
 
@@ -121,6 +133,12 @@ update msg model =
 
     Logout ->
       ({ model | passwords = Nothing, masterKey = Nothing }, Cmd.none )
+
+    ShowNewPasswordModal ->
+      ({ model | modal = Just NewPassword }, Cmd.none )
+
+    CloseModal ->
+      ({ model | modal = Nothing }, Cmd.none )
 
 
 port parseLibraryData : ParseLibraryDataContent -> Cmd msg
@@ -143,17 +161,8 @@ downloadLibraryCmd =
   Http.send NewLibrary (Http.get apiEndPoint decodeLibraryData)
 
 
--- decodeResponse : Decode.Decoder Library
--- decodeResponse =
---   Decode.at ["hmac"] Decode.string
-
-
 decodeLibraryData =
   Decode.map2 LibraryData (Decode.field "library" Decode.string) (Decode.field "hmac" Decode.string)
-
-
-decodeLibrary =
-  Decode.map4 Library (Decode.field "blob" Decode.string) (Decode.field "library_version" Decode.int) (Decode.field "api_version" Decode.int) (Decode.field "modified" Decode.int)
 
 
 decryptLibraryIfPossibleCmd : Model -> Cmd Msg
@@ -242,6 +251,7 @@ viewManager model =
   section [ id "authorized" ]
     [ viewNavBar model
     , viewPasswordTable model
+    , viewModal model
     ]
 
 
@@ -256,7 +266,7 @@ viewNavBar model =
             [ div [ class "form-group" ]
                 [ input [ id "filter", placeholder "Filter... <CTRL+E>", class "flter-control" ] [] ]
             , text " "
-            , button [ class "newPassword btn" ]
+            , button [ class "newPassword btn", onClick ShowNewPasswordModal ]
                 [ i [ class "icon-plus" ] []
                 , text " New Password"
                 ]
@@ -275,7 +285,20 @@ viewNavBar model =
 
 viewPasswordTable : Model -> Html Msg
 viewPasswordTable model =
-  text ""
+  div [ class "wide-container" ]
+    [ table [ class "table table-striped", id "overview" ]
+        [ thead []
+            [ tr []
+                [ th [] [ text "Title" ]
+                , th [] [ text "Username" ]
+                , th [] [ text "Password" ]
+                , th [] [ text "Comment" ]
+                , th [] [ text "Actions" ]
+                ]
+            ]
+        , viewPasswords model.passwords
+        ]
+    ]
 
 
 viewManagerDump : Model -> Html Msg
@@ -290,12 +313,106 @@ viewPasswords : Maybe (List Password) -> Html Msg
 viewPasswords passwords =
   case passwords of
     Just passwords ->
-      div [] (List.map viewPassword passwords)
+      tbody [] (List.map viewPassword passwords)
 
     Nothing ->
-      text ""
+      tbody [] []
 
 
 viewPassword : Password -> Html Msg
 viewPassword password =
-  p [] [ text (password.title ++ " - " ++ password.username) ]
+  tr []
+    [ td []
+        [ text password.title ]
+    , td []
+        [ div [ class "obscured" ] [ text password.username ] ]
+    , td []
+        [ div [ class "obscured" ] [ text password.password ] ]
+    , td []
+        [ div [ class "comment" ] [ text password.comment ] ]
+    , td []
+        [ a [ class "copyPassword" ]
+            [ i [ class "icon-docs" ] [] ]
+        , a [ class "toggleVisibility" ]
+            [ i [ class "icon-eye" ] [] ]
+        , a [ class "editPassword" ]
+            [ i [ class "icon-edit" ] [] ]
+        , a [ class "deletePassword" ]
+            [ i [ class "icon-trash" ] [] ]
+        ]
+    ]
+
+
+viewModal : Model -> Html Msg
+viewModal model =
+  case model.modal of
+    Just EditPassword ->
+      text "Show exit password"
+
+    Just NewPassword ->
+      viewNewPasswordModal model
+
+    Just EditMasterKey ->
+      text "Edit master key"
+
+    Nothing ->
+      text "[No modal]"
+
+
+viewNewPasswordModal : Model -> Html Msg
+viewNewPasswordModal model =
+  div [ class "modal visible-modal", id "editModal" ]
+    [ div [ class "modal-dialog" ]
+        [ div [ class "modal-content" ]
+            [ div [ class "modal-header" ]
+                [ button [ class "close", onClick CloseModal, attribute "aria-hidden" "true", id "modalClose1" ]
+                    [ text "x" ]
+                , h4 [ class "modal-title", id "modalHeader" ]
+                    [ text "New password" ]
+                ]
+            , viewNewPasswordModalForm model
+            , div [ class "modal-footer" ]
+                [ a [ class "btn btn-default" ]
+                    [ i [ class "icon-shuffle" ] []
+                    , text "Random Password"
+                    ]
+                , a [ class "btn btn-primary" ]
+                    [ i [ class "icon-floppy" ] []
+                    , text "Save"
+                    ]
+                ]
+            ]
+        ]
+    ]
+
+
+viewNewPasswordModalForm : Model -> Html Msg
+viewNewPasswordModalForm model =
+  Html.form [ class "modal-body form-horizontal" ]
+    [ viewFormInput "title" "Title" "text"
+    , viewFormInput "URL" "URL" "text"
+    , viewFormInput "username" "Username" "text"
+    , viewFormInput "pass" "Password" "password"
+    , viewFormInput "passRepeat" "Password Repeat" "password"
+    , viewFormTextarea "comment" "Comment"
+    ]
+
+
+viewFormInput : String -> String -> String -> Html Msg
+viewFormInput inputId title inputType =
+  div [ class "form-group" ]
+    [ label [ class "col-sm-4 control-label", for inputId ]
+        [ text title ]
+    , div [ class "col-sm-8" ]
+        [ input [ attribute "type" inputType, class "form-control", id inputId ] [] ]
+    ]
+
+
+viewFormTextarea : String -> String -> Html Msg
+viewFormTextarea inputId title =
+  div [ class "form-group" ]
+    [ label [ class "col-sm-4 control-label", for inputId ]
+        [ text title ]
+    , div [ class "col-sm-8" ]
+        [ textarea [ class "form-control", id inputId ] [] ]
+    ]
