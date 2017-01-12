@@ -375,7 +375,6 @@ viewPasswordTable model =
             ]
         , viewPasswords model.passwords
         ]
-    , text (toString model.idleTime)
     ]
 
 
