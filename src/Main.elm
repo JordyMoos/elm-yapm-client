@@ -216,7 +216,7 @@ viewLoginForm model =
         [ onSubmit SubmitAuthForm, class "well form-inline", id "decrypt" ]
         [ input [ placeholder "master key", onInput SetMasterKeyInput, value model.masterKeyInput, class "form-control", id "encryptionKey" ] []
         , button
-            [ onClick SubmitAuthForm, class "btn" ]
+            [ class "btn" ]
             [ i [ class "icon-lock-open" ] []
             , text " Decrypt"
             ]
