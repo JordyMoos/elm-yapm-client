@@ -360,7 +360,7 @@ viewModal model =
       viewNewMasterKeyModal model
 
     Nothing ->
-      text "[No modal]"
+      text ""
 
 
 viewNewPasswordModal : Model -> Html Msg
