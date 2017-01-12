@@ -9,6 +9,8 @@ import Json.Decode as Decode
 import Maybe.Extra exposing (isNothing)
 import Dom
 import Task
+import Time
+import Mouse
 
 
 main : Program Flags Model Msg
@@ -37,6 +39,7 @@ type alias Model =
   , error : Maybe String
   , passwords : Maybe (List Password)
   , modal : Maybe Modal
+  , idleTime : Int
   }
 
 
@@ -85,6 +88,7 @@ initModel flags =
   , error = Nothing
   , passwords = Nothing
   , modal = Nothing
+  , idleTime = 0
   }
 
 
@@ -124,6 +128,8 @@ type Msg
   | ShowNewPasswordModal
   | ShowNewMasterKeyModal
   | CloseModal
+  | IncrementIdleTime Time.Time
+  | ResetIdleTime Mouse.Position
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -165,7 +171,7 @@ update msg model =
       { model | passwords = Just passwords } ! []
 
     Logout ->
-      { model | passwords = Nothing, masterKey = Nothing } ! []
+      logout model ! []
 
     ShowNewPasswordModal ->
       { model | modal = Just NewPassword } ! []
@@ -175,6 +181,15 @@ update msg model =
 
     CloseModal ->
       { model | modal = Nothing } ! []
+
+    IncrementIdleTime _ ->
+      if model.idleTime + 1 > model.config.maxIdleTime then
+        logout model ! []
+      else
+        { model | idleTime = model.idleTime + 1 } ! []
+
+    ResetIdleTime _ ->
+      { model | idleTime = 0 } ! []
 
 
 port parseLibraryData : ParseLibraryDataContent -> Cmd msg
@@ -186,10 +201,27 @@ port passwords : (List Password -> msg) -> Sub msg
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  Sub.batch
-    [ error SetError
-    , passwords SetPasswords
-    ]
+  case model.passwords of
+    Just _ ->
+      Sub.batch
+        [ error SetError
+        , passwords SetPasswords
+        , Time.every Time.second IncrementIdleTime
+        , Mouse.clicks ResetIdleTime
+        , Mouse.moves ResetIdleTime
+        , Mouse.downs ResetIdleTime
+        ]
+
+    Nothing ->
+      Sub.batch
+        [ error SetError
+        , passwords SetPasswords
+        ]
+
+
+logout : Model -> Model
+logout model =
+  { model | passwords = Nothing, masterKey = Nothing, idleTime = 0 }
 
 
 downloadLibraryCmd : String -> Cmd Msg
@@ -343,6 +375,7 @@ viewPasswordTable model =
             ]
         , viewPasswords model.passwords
         ]
+    , text (toString model.idleTime)
     ]
 
 
