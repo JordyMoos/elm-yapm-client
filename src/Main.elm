@@ -214,7 +214,16 @@ viewLoginForm model =
     []
     [ Html.form
         [ onSubmit SubmitAuthForm, class "well form-inline", id "decrypt" ]
-        [ input [ placeholder "master key", onInput SetMasterKeyInput, value model.masterKeyInput, class "form-control", id "encryptionKey" ] []
+        [ input
+            [ placeholder "master key"
+            , onInput SetMasterKeyInput
+            , value model.masterKeyInput
+            , class "form-control"
+            , id "encryptionKey"
+            , autocomplete False
+            , attribute "type" "password"
+            ]
+            []
         , button
             [ class "btn" ]
             [ i [ class "icon-lock-open" ] []
@@ -326,14 +335,10 @@ viewPasswords passwords =
 viewPassword : Password -> Html Msg
 viewPassword password =
   tr []
-    [ td []
-        [ text password.title ]
-    , td []
-        [ div [ class "obscured" ] [ text password.username ] ]
-    , td []
-        [ div [ class "obscured" ] [ text password.password ] ]
-    , td []
-        [ div [ class "comment" ] [ text password.comment ] ]
+    [ td [] [ text password.title ]
+    , td [] [ div [ class "obscured" ] [ text password.username ] ]
+    , td [] [ div [ class "obscured" ] [ text password.password ] ]
+    , td [] [ div [ class "comment" ] [ text password.comment ] ]
     , td []
         [ a [ class "copyPassword" ]
             [ i [ class "icon-docs" ] [] ]
@@ -363,28 +368,43 @@ viewModal model =
       text ""
 
 
-viewNewPasswordModal : Model -> Html Msg
-viewNewPasswordModal model =
+viewModalContainer : List (Html Msg) -> Html Msg
+viewModalContainer html =
   div [ class "modal visible-modal", id "modal" ]
     [ div [ class "modal-dialog" ]
         [ div [ class "modal-content" ]
-            [ div [ class "modal-header" ]
-                [ button [ class "close", onClick CloseModal, attribute "aria-hidden" "true", id "modalClose1" ]
-                    [ text "x" ]
-                , h4 [ class "modal-title", id "modalHeader" ]
-                    [ text "New Password" ]
-                ]
-            , viewNewPasswordForm model
-            , div [ class "modal-footer" ]
-                [ a [ class "btn btn-default" ]
-                    [ i [ class "icon-shuffle" ] []
-                    , text "Random Password"
-                    ]
-                , a [ class "btn btn-primary" ]
-                    [ i [ class "icon-floppy" ] []
-                    , text "Save"
-                    ]
-                ]
+            html
+        ]
+    ]
+
+
+viewModalHeader : String -> Html Msg
+viewModalHeader title =
+  div [ class "modal-header" ]
+      [ button
+          [ class "close"
+          , onClick CloseModal
+          , attribute "aria-hidden" "true"
+          ]
+          [ text "x" ]
+      , h4 [ class "modal-title", id "modalHeader" ]
+          [ text title ]
+      ]
+
+
+viewNewPasswordModal : Model -> Html Msg
+viewNewPasswordModal model =
+  viewModalContainer
+    [ viewModalHeader "New Password"
+    , viewNewPasswordForm model
+    , div [ class "modal-footer" ]
+        [ a [ class "btn btn-default" ]
+            [ i [ class "icon-shuffle" ] []
+            , text "Random Password"
+            ]
+        , a [ class "btn btn-primary" ]
+            [ i [ class "icon-floppy" ] []
+            , text "Save"
             ]
         ]
     ]
@@ -404,22 +424,13 @@ viewNewPasswordForm model =
 
 viewNewMasterKeyModal : Model -> Html Msg
 viewNewMasterKeyModal model =
-  div [ class "modal visible-modal", id "modal" ]
-    [ div [ class "modal-dialog" ]
-        [ div [ class "modal-content" ]
-            [ div [ class "modal-header" ]
-                [ button [ class "close", onClick CloseModal, attribute "aria-hidden" "true" ]
-                    [ text "x" ]
-                , h4 [ class "modal-title", id "modalHeader" ]
-                    [ text "New Master Key" ]
-                ]
-            , viewNewMasterKeyForm model
-            , div [ class "modal-footer" ]
-                [ a [ class "btn btn-primary" ]
-                    [ i [ class "icon-attention" ] []
-                    , text "Save"
-                    ]
-                ]
+  viewModalContainer
+    [ viewModalHeader "New Master Key"
+    , viewNewMasterKeyForm model
+    , div [ class "modal-footer" ]
+        [ a [ class "btn btn-primary" ]
+            [ i [ class "icon-attention" ] []
+            , text "Save"
             ]
         ]
     ]
