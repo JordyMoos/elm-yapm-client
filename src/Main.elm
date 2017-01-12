@@ -157,14 +157,14 @@ decodeLibrary =
 
 decryptLibraryIfPossibleCmd : Model -> Cmd Msg
 decryptLibraryIfPossibleCmd model =
-  if areDecryptRequirementsSet model then
+  if areDecryptRequirementsMet model then
     parseLibraryData (ParseLibraryDataContent model.masterKey model.libraryData)
   else
     Cmd.none
 
 
-areDecryptRequirementsSet : Model -> Bool
-areDecryptRequirementsSet model =
+areDecryptRequirementsMet : Model -> Bool
+areDecryptRequirementsMet model =
   let
     unMetRequirements = [ maybeIsNothing model.masterKey, maybeIsNothing model.libraryData ]
       |> List.filter (\value -> value)
