@@ -6,6 +6,7 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Http
 import Json.Decode as Decode
+import Maybe.Extra exposing (isNothing)
 
 
 apiEndPoint = "http://localhost:8001"
@@ -166,24 +167,10 @@ decryptLibraryIfPossibleCmd model =
 areDecryptRequirementsMet : Model -> Bool
 areDecryptRequirementsMet model =
   let
-    unMetRequirements = [ maybeIsNothing model.masterKey, maybeIsNothing model.libraryData ]
+    unMetRequirements = [ isNothing model.masterKey, isNothing model.libraryData ]
       |> List.filter (\value -> value)
   in
     List.length unMetRequirements == 0
-
-
-maybeIsNothing : Maybe a -> Bool
-maybeIsNothing maybe =
-  case maybe of
-    Nothing ->
-      True
-    Just _ ->
-      False
-
-
-maybeHasValue : Maybe a -> Bool
-maybeHasValue maybe =
-  not (maybeIsNothing maybe)
 
 
 view : Model -> Html Msg
