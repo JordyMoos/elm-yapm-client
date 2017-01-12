@@ -204,25 +204,20 @@ viewUnAuthSection model =
        [ id "welcome" ]
        [ h1 [] [ text "Online Password Manager" ]
        , viewLoginForm model
-       , p [] [ text model.masterKeyInput ]
-       , hr [] []
-       , p [] [ text (Maybe.withDefault "[Nothing]" model.masterKey) ]
-       , hr [] []
-       , viewLibraryData model.libraryData
-       , hr [] []
-       , viewError model.error
-       , hr [] []
-       , viewPasswords model.passwords
        ]
     ]
 
 
 viewLoginForm : Model -> Html Msg
 viewLoginForm model =
-  div
-    []
-    [ input [ placeholder "master key", onInput SetMasterKeyInput, value model.masterKeyInput ] []
-    , button [ onClick SubmitAuthForm ] [ text "Decrypt" ]
+  Html.form
+    [ onSubmit SubmitAuthForm, class "well form-inline", id "decrypt" ]
+    [ input [ placeholder "master key", onInput SetMasterKeyInput, value model.masterKeyInput, class "form-control", id "encryptionKey" ] []
+    , button
+        [ onClick SubmitAuthForm, class "btn" ]
+        [ i [ class "icon-lock-open" ] []
+        , text " Decrypt"
+        ]
     ]
 
 
