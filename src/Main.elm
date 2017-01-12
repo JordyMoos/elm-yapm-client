@@ -117,19 +117,19 @@ update msg model =
       model ! []
 
     DownloadLibrary ->
-      (model, downloadLibraryCmd)
+      model ! [ downloadLibraryCmd ]
 
     NewLibrary (Ok newLibraryData) ->
       let
         newModel = { model | libraryData = Just newLibraryData }
       in
-        ( newModel, decryptLibraryIfPossibleCmd newModel )
+        newModel ! [ decryptLibraryIfPossibleCmd newModel ]
 
     NewLibrary (Err _) ->
-      ({ model | error = Just "Fetching library failed" }, Cmd.none)
+      { model | error = Just "Fetching library failed" } ! []
 
     SetMasterKeyInput masterKeyInput ->
-      ({ model | masterKeyInput = masterKeyInput }, Cmd.none)
+      { model | masterKeyInput = masterKeyInput } ! []
 
     SubmitAuthForm ->
       let
@@ -137,28 +137,28 @@ update msg model =
         masterKeyInput = ""
         newModel = { model | masterKey = masterKey, masterKeyInput = masterKeyInput }
       in
-        ( newModel, decryptLibraryIfPossibleCmd newModel )
+        newModel ! [ decryptLibraryIfPossibleCmd newModel ]
 
     SetError error ->
-      ({ model | error = Just error }, Cmd.none )
+      { model | error = Just error } ! []
 
     ClearError ->
-      ({ model | error = Nothing }, Cmd.none )
+      { model | error = Nothing } ! []
 
     SetPasswords passwords ->
-      ({ model | passwords = Just passwords }, Cmd.none )
+      { model | passwords = Just passwords } ! []
 
     Logout ->
-      ({ model | passwords = Nothing, masterKey = Nothing }, Cmd.none )
+      { model | passwords = Nothing, masterKey = Nothing } ! []
 
     ShowNewPasswordModal ->
-      ({ model | modal = Just NewPassword }, Cmd.none )
+      { model | modal = Just NewPassword } ! []
 
     ShowNewMasterKeyModal ->
-      ({ model | modal = Just NewMasterKey }, Cmd.none )
+      { model | modal = Just NewMasterKey } ! []
 
     CloseModal ->
-      ({ model | modal = Nothing }, Cmd.none )
+      { model | modal = Nothing } ! []
 
 
 port parseLibraryData : ParseLibraryDataContent -> Cmd msg
