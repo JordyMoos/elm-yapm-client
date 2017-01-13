@@ -63,11 +63,13 @@ type alias ParseLibraryDataContent =
   }
 
 
-type alias SaveLibraryDataContent =
-  { masterKey : Maybe String
+type alias EncryptLibraryDataContent =
+  { oldMasterKey : Maybe String
   , oldLibraryData : Maybe LibraryData
+  , newMasterKey : Maybe String
   , passwords : Maybe (List Password)
   }
+
 
 type alias Password =
   { comment : String
@@ -136,6 +138,7 @@ type Msg
   | CloseModal
   | IncrementIdleTime Time.Time
   | ResetIdleTime Mouse.Position
+  | EncryptLibrary
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -197,6 +200,12 @@ update msg model =
     ResetIdleTime _ ->
       { model | idleTime = 0 } ! []
 
+    EncryptLibrary ->
+      model !
+        [ EncryptLibraryDataContent model.masterKey model.libraryData model.masterKey model.passwords
+            |> encryptLibraryData
+        ]
+
 
 port parseLibraryData : ParseLibraryDataContent -> Cmd msg
 
@@ -204,7 +213,7 @@ port error : (String -> msg) -> Sub msg
 
 port passwords : (List Password -> msg) -> Sub msg
 
-port saveLibraryData : SaveLibraryDataContent -> Cmd msg
+port encryptLibraryData : EncryptLibraryDataContent -> Cmd msg
 
 
 subscriptions : Model -> Sub Msg
@@ -351,6 +360,10 @@ viewNavBar model =
             [ div [ class "form-group" ]
                 [ input [ id "filter", placeholder "Filter... <CTRL+E>", class "flter-control" ] [] ]
             , text " "
+            , button [ class "save btn", onClick EncryptLibrary ]
+                [ i [ class "icon-floppy" ] []
+                , text " Save"
+                ]
             , button [ class "newPassword btn", onClick ShowNewPasswordModal ]
                 [ i [ class "icon-plus" ] []
                 , text " New Password"

@@ -21,6 +21,9 @@
 <body>
     <script>
       function getErrorMessage(error) {
+        console.log('In catch');
+        console.log(error);
+
         if (typeof(error) === 'string') {
           return error;
         }
@@ -36,12 +39,7 @@
 
       var app = Elm.Main.fullscreen(window.yapm.config);
       app.ports.parseLibraryData.subscribe(function (request) {
-        var promise = window.yapm.createCryptoManager(
-          request.masterKey,
-          request.libraryData
-        );
-
-        promise.getPasswordList()
+        window.yapm.decryptLibrary(request)
           .then(function (passwords) {
             app.ports.passwords.send(passwords);
           })
@@ -50,9 +48,21 @@
           });
       });
 
-      app.ports.saveLibraryData.subscribe(function (request) {
-        console.log('In save library data');
-        console.log(request);
+      app.ports.encryptLibraryData.subscribe(function (request) {
+        window.yapm.encryptLibrary(request)
+          .then(function (data) {
+            console.log('in then');
+            console.log(arguments);
+
+            // app.ports.saveLibraryData.send({
+            //   oldHash: data[0],
+            //   libraryData: data[1],
+            //   newHash: data[2]
+            // });
+          })
+          .catch(function (error) {
+            app.ports.error.send(getErrorMessage(error));
+          });
       });
     </script>
 </body>

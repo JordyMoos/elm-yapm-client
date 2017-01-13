@@ -1,8 +1,34 @@
 import { config } from './config';
 import { createCryptoManager, generateRandomPassword } from './crypto';
 
+
+function decryptLibrary (request) {
+  let { masterKey, libraryData } = request;
+  let cryptoManager = createCryptoManager(
+    masterKey,
+    libraryData
+  );
+
+  return cryptoManager.getPasswordList();
+}
+
+function encryptLibrary (request) {
+  let { oldMasterKey, oldLibraryData, newMasterKey, passwords } = request;
+  let cryptoManager = createCryptoManager(
+    oldMasterKey,
+    oldLibraryData
+  );
+
+  let oldHashPromise = cryptoManager.getHash();
+  let libraryPromise = cryptoManager.encryptPasswordList(passwords, newMasterKey);
+  let newHashPromise = libraryPromise.then(cryptoManager.getHash);
+
+  return Promise.all([oldHashPromise, libraryPromise, newHashPromise]);
+}
+
 window.yapm = {
   config: config,
-  createCryptoManager: createCryptoManager,
   generateRandomPassword: generateRandomPassword,
+  decryptLibrary: decryptLibrary,
+  encryptLibrary: encryptLibrary,
 };
