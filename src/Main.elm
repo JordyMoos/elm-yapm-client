@@ -6,11 +6,13 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Http
 import Json.Decode as Decode
+import Json.Encode as Encode
 import Maybe.Extra exposing (isNothing)
 import Dom
 import Task
 import Time
 import Mouse
+import Debug
 
 
 main : Program Flags Model Msg
@@ -71,6 +73,13 @@ type alias EncryptLibraryDataContent =
   }
 
 
+type alias UploadLibraryContent =
+  { oldHash : String
+  , newHash : String
+  , libraryData : LibraryData
+  }
+
+
 type alias Password =
   { comment : String
   , password : String
@@ -126,6 +135,8 @@ doDownloadLibrary (model, cmd) =
 type Msg
   = NoOp
   | DownloadLibrary
+  | UploadLibrary UploadLibraryContent
+  | UploadLibraryResponse (Result Http.Error String)
   | NewLibrary (Result Http.Error LibraryData)
   | SetMasterKeyInput String
   | SubmitAuthForm
@@ -149,6 +160,19 @@ update msg model =
 
     DownloadLibrary ->
       model ! [ downloadLibraryCmd model.config.apiEndPoint ]
+
+    UploadLibrary uploadLibraryContent ->
+      let
+        _ = Debug.log "Hash Old" uploadLibraryContent.oldHash
+        _ = Debug.log "Library" uploadLibraryContent.libraryData.library
+      in
+        model ! [ uploadLibraryCmd model.config.apiEndPoint uploadLibraryContent ]
+
+    UploadLibraryResponse (Ok message) ->
+      { model | error = Just <| "Upload success: " ++ message } ! []
+
+    UploadLibraryResponse (Err _) ->
+      { model | error = Just "Upload error" } ! []
 
     NewLibrary (Ok newLibraryData) ->
       let
@@ -215,6 +239,8 @@ port passwords : (List Password -> msg) -> Sub msg
 
 port encryptLibraryData : EncryptLibraryDataContent -> Cmd msg
 
+port uploadLibrary : (UploadLibraryContent -> msg) -> Sub msg
+
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
@@ -223,6 +249,7 @@ subscriptions model =
       Sub.batch
         [ error SetError
         , passwords SetPasswords
+        , uploadLibrary UploadLibrary
         , Time.every Time.second IncrementIdleTime
         , Mouse.clicks ResetIdleTime
         , Mouse.moves ResetIdleTime
@@ -246,8 +273,34 @@ downloadLibraryCmd apiEndPoint =
   Http.send NewLibrary (Http.get apiEndPoint decodeLibraryData)
 
 
+-- decodeLibraryData : (a -> b -> value)
 decodeLibraryData =
   Decode.map2 LibraryData (Decode.field "library" Decode.string) (Decode.field "hmac" Decode.string)
+
+
+encodeLibraryData : LibraryData -> String
+encodeLibraryData libraryData =
+  Encode.object
+    [ ( "hmac", Encode.string libraryData.hmac )
+    , ( "library", Encode.string libraryData.library )
+    ]
+    |> Encode.encode 0
+
+
+uploadLibraryCmd : String -> UploadLibraryContent -> Cmd Msg
+uploadLibraryCmd apiEndPoint libraryContent =
+  Http.post apiEndPoint (uploadLibraryBody libraryContent) Decode.string
+    |> Http.send UploadLibraryResponse
+
+
+uploadLibraryBody : UploadLibraryContent -> Http.Body
+uploadLibraryBody libraryContent =
+  let
+    encodedLibrary = encodeLibraryData libraryContent.libraryData
+      |> Http.encodeUri
+    params = "pwhash=" ++ libraryContent.oldHash ++ "&newlib=" ++ encodedLibrary
+  in
+    Http.stringBody "application/json" params
 
 
 decryptLibraryIfPossibleCmd : Model -> Cmd Msg
@@ -346,6 +399,7 @@ viewManager model =
     [ viewNavBar model
     , viewPasswordTable model
     , viewModal model
+    , viewError model.error
     ]
 
 
@@ -396,14 +450,6 @@ viewPasswordTable model =
             ]
         , viewPasswords model.passwords
         ]
-    ]
-
-
-viewManagerDump : Model -> Html Msg
-viewManagerDump model =
-  div []
-    [ button [ onClick Logout ] [ text "Logout" ]
-    , viewPasswords model.passwords
     ]
 
 

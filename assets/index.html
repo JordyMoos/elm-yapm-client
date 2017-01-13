@@ -51,14 +51,11 @@
       app.ports.encryptLibraryData.subscribe(function (request) {
         window.yapm.encryptLibrary(request)
           .then(function (data) {
-            console.log('in then');
-            console.log(arguments);
-
-            // app.ports.saveLibraryData.send({
-            //   oldHash: data[0],
-            //   libraryData: data[1],
-            //   newHash: data[2]
-            // });
+            app.ports.uploadLibrary.send({
+              oldHash: data[0],
+              libraryData: data[1],
+              newHash: data[2]
+            });
           })
           .catch(function (error) {
             app.ports.error.send(getErrorMessage(error));
