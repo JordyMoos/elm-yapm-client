@@ -300,7 +300,7 @@ uploadLibraryBody libraryContent =
       |> Http.encodeUri
     params = "pwhash=" ++ libraryContent.oldHash ++ "&newlib=" ++ encodedLibrary
   in
-    Http.stringBody "application/json" params
+    Http.stringBody "application/x-www-form-urlencoded" params
 
 
 decryptLibraryIfPossibleCmd : Model -> Cmd Msg
