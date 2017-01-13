@@ -20,6 +20,20 @@
 
 <body>
     <script>
+      function getErrorMessage(error) {
+        if (typeof(error) === 'string') {
+          return error;
+        }
+
+        if (typeof(error) === 'object') {
+          if (error.message && typeof(error.message) === 'string') {
+            return error.message;
+          }
+        }
+
+        return 'Unknown error';
+      }
+
       var app = Elm.Main.fullscreen(window.yapm.config);
       app.ports.parseLibraryData.subscribe(function (request) {
         var promise = window.yapm.createCryptoManager(
@@ -32,17 +46,13 @@
             app.ports.passwords.send(passwords);
           })
           .catch(function (error) {
-            var errorMsg = 'Unknown error';
-            if (typeof(error) === 'string') {
-              errorMsg = error;
-            } else if (typeof(error) === 'object') {
-              if (error.message && typeof(error.message) === 'string') {
-                errorMsg = error.message;
-              }
-            }
-
-            app.ports.error.send(errorMsg);
+            app.ports.error.send(getErrorMessage(error));
           });
+      });
+
+      app.ports.saveLibraryData.subscribe(function (request) {
+        console.log('In save library data');
+        console.log(request);
       });
     </script>
 </body>

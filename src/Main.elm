@@ -63,6 +63,12 @@ type alias ParseLibraryDataContent =
   }
 
 
+type alias SaveLibraryDataContent =
+  { masterKey : Maybe String
+  , oldLibraryData : Maybe LibraryData
+  , passwords : Maybe (List Password)
+  }
+
 type alias Password =
   { comment : String
   , password : String
@@ -197,6 +203,8 @@ port parseLibraryData : ParseLibraryDataContent -> Cmd msg
 port error : (String -> msg) -> Sub msg
 
 port passwords : (List Password -> msg) -> Sub msg
+
+port saveLibraryData : SaveLibraryDataContent -> Cmd msg
 
 
 subscriptions : Model -> Sub Msg
