@@ -1,4 +1,4 @@
-port module Main exposing (..)
+port module Main exposing (main)
 
 import Basics exposing (..)
 import Html exposing (..)
@@ -166,7 +166,7 @@ update msg model =
         _ = Debug.log "Hash Old" uploadLibraryContent.oldHash
         _ = Debug.log "Library" uploadLibraryContent.libraryData.library
       in
-        model ! [ uploadLibraryCmd model.config.apiEndPoint uploadLibraryContent ]
+        { model | libraryData = Just uploadLibraryContent.libraryData } ! [ uploadLibraryCmd model.config.apiEndPoint uploadLibraryContent ]
 
     UploadLibraryResponse (Ok message) ->
       { model | error = Just <| "Upload success: " ++ message } ! []
