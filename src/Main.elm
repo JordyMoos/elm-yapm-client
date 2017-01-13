@@ -39,9 +39,11 @@ type alias Model =
   , isDownloading : Bool
   , libraryData : Maybe LibraryData
   , error : Maybe String
-  , passwords : Maybe (List Password)
+  , passwords : (List WrappedPassword)
+  , isAuthenticated : Bool
   , modal : Maybe Modal
   , idleTime : Int
+  , uid : Int
   }
 
 
@@ -69,7 +71,7 @@ type alias EncryptLibraryDataContent =
   { oldMasterKey : Maybe String
   , oldLibraryData : Maybe LibraryData
   , newMasterKey : Maybe String
-  , passwords : Maybe (List Password)
+  , passwords : List Password
   }
 
 
@@ -89,6 +91,13 @@ type alias Password =
   }
 
 
+type alias WrappedPassword =
+  { password : Password
+  , id : Int
+  , isVisible : Bool
+  }
+
+
 type Modal
   = EditPassword
   | NewPassword
@@ -103,9 +112,11 @@ initModel flags =
   , isDownloading = False
   , libraryData = Nothing
   , error = Nothing
-  , passwords = Nothing
+  , passwords = []
+  , isAuthenticated = False
   , modal = Nothing
   , idleTime = 0
+  , uid = 0
   }
 
 
@@ -155,6 +166,7 @@ type Msg
   | IncrementIdleTime Time.Time
   | ResetIdleTime Mouse.Position
   | EncryptLibrary
+  | TogglePasswordVisibility Int
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -209,7 +221,22 @@ update msg model =
       { model | error = Nothing } ! []
 
     SetPasswords passwords ->
-      { model | passwords = Just passwords } ! []
+      let
+        firstId = model.uid
+        lastId = model.uid + List.length passwords - 1
+        ids = List.range firstId lastId
+
+        wrappedPasswords = List.map2
+          (\password -> \id -> WrappedPassword password id False)
+          passwords
+          ids
+      in
+        { model
+          | passwords = wrappedPasswords
+          , uid = lastId + 1
+          , isAuthenticated = True
+        }
+          ! []
 
     Logout ->
       logout model ! [ focusMasterKeyInputCmd ]
@@ -234,9 +261,19 @@ update msg model =
 
     EncryptLibrary ->
       model !
-        [ EncryptLibraryDataContent model.masterKey model.libraryData model.masterKey model.passwords
+        [ EncryptLibraryDataContent model.masterKey model.libraryData model.masterKey (unwrapPasswords model.passwords)
             |> encryptLibraryData
         ]
+
+    TogglePasswordVisibility id ->
+      let
+        updatePassword password =
+          if password.id == id then
+            { password | isVisible = not password.isVisible }
+          else
+            password
+      in
+        { model | passwords = List.map updatePassword model.passwords } ! []
 
 
 port parseLibraryData : ParseLibraryDataContent -> Cmd msg
@@ -252,28 +289,31 @@ port uploadLibrary : (UploadLibraryContent -> msg) -> Sub msg
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-  case model.passwords of
-    Just _ ->
-      Sub.batch
-        [ error SetError
-        , passwords SetPasswords
-        , uploadLibrary UploadLibrary
-        , Time.every Time.second IncrementIdleTime
-        , Mouse.clicks ResetIdleTime
-        , Mouse.moves ResetIdleTime
-        , Mouse.downs ResetIdleTime
-        ]
-
-    Nothing ->
-      Sub.batch
-        [ error SetError
-        , passwords SetPasswords
-        ]
+  if model.isAuthenticated then
+    Sub.batch
+      [ error SetError
+      , passwords SetPasswords
+      , uploadLibrary UploadLibrary
+      , Time.every Time.second IncrementIdleTime
+      , Mouse.clicks ResetIdleTime
+      , Mouse.moves ResetIdleTime
+      , Mouse.downs ResetIdleTime
+      ]
+  else
+    Sub.batch
+      [ error SetError
+      , passwords SetPasswords
+      ]
 
 
 logout : Model -> Model
 logout model =
-  { model | passwords = Nothing, masterKey = Nothing, idleTime = 0 }
+  { model
+    | passwords = []
+    , masterKey = Nothing
+    , idleTime = 0
+    , isAuthenticated = False
+  }
 
 
 downloadLibraryCmd : String -> Cmd Msg
@@ -336,14 +376,17 @@ areDecryptRequirementsMet model =
     List.length unMetRequirements == 0
 
 
+unwrapPasswords : List WrappedPassword -> List Password
+unwrapPasswords wrappedPasswords =
+  List.map (\wrapper -> wrapper.password) wrappedPasswords
+
+
 view : Model -> Html Msg
 view model =
-  case model.passwords of
-    Nothing ->
-      viewUnAuthSection model
-
-    Just _ ->
-      viewManager model
+  if model.isAuthenticated then
+    viewManager model
+  else
+    viewUnAuthSection model
 
 
 viewUnAuthSection : Model -> Html Msg
@@ -469,27 +512,22 @@ viewPasswordTable model =
     ]
 
 
-viewPasswords : Maybe (List Password) -> Html Msg
+viewPasswords : List WrappedPassword -> Html Msg
 viewPasswords passwords =
-  case passwords of
-    Just passwords ->
-      tbody [] (List.map viewPassword passwords)
-
-    Nothing ->
-      tbody [] []
+  tbody [] (List.map viewPassword passwords)
 
 
-viewPassword : Password -> Html Msg
-viewPassword password =
-  tr []
+viewPassword : WrappedPassword -> Html Msg
+viewPassword {password, id, isVisible} =
+  tr [ Html.Attributes.id ("password-" ++ (toString id)) ]
     [ td [] [ text password.title ]
-    , td [] [ div [ class "obscured" ] [ text password.username ] ]
-    , td [] [ div [ class "obscured" ] [ text password.password ] ]
+    , td [] [ div [ class (getPasswordVisibility isVisible) ] [ text password.username ] ]
+    , td [] [ div [ class (getPasswordVisibility isVisible) ] [ text password.password ] ]
     , td [] [ div [ class "comment" ] [ text password.comment ] ]
     , td []
         [ a [ class "copyPassword" ]
             [ i [ class "icon-docs" ] [] ]
-        , a [ class "toggleVisibility" ]
+        , a [ class "toggleVisibility", onClick (TogglePasswordVisibility id) ]
             [ i [ class "icon-eye" ] [] ]
         , a [ class "editPassword" ]
             [ i [ class "icon-edit" ] [] ]
@@ -497,6 +535,14 @@ viewPassword password =
             [ i [ class "icon-trash" ] [] ]
         ]
     ]
+
+
+getPasswordVisibility : Bool -> String
+getPasswordVisibility isVisible =
+  if isVisible then
+    ""
+  else
+    "obscured"
 
 
 viewModal : Model -> Html Msg

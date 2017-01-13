@@ -127,6 +127,10 @@ table#tableHeader th:nth-child(-n+3), table#overview td:nth-child(-n+3) {
     overflow: hidden;
 }
 
+a.copyPassword, a.toggleVisibility, a.editPassword, a.deletePassword {
+    cursor: pointer;
+}
+
 alert {
     width: 100%;
     padding: 1.5em;
