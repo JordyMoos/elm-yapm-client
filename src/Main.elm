@@ -120,8 +120,13 @@ focusMasterKeyInput : (Model, Cmd Msg) -> (Model, Cmd Msg)
 focusMasterKeyInput (model, cmd) =
   model !
     [ cmd
-    , Task.attempt (\_ -> NoOp) <| Dom.focus "encryptionKey"
+    , focusMasterKeyInputCmd
     ]
+
+
+focusMasterKeyInputCmd : Cmd Msg
+focusMasterKeyInputCmd =
+  Task.attempt (\_ -> NoOp) <| Dom.focus "encryptionKey"
 
 
 doDownloadLibrary : (Model, Cmd Msg) -> (Model, Cmd Msg)
@@ -207,7 +212,7 @@ update msg model =
       { model | passwords = Just passwords } ! []
 
     Logout ->
-      logout model ! []
+      logout model ! [ focusMasterKeyInputCmd ]
 
     ShowNewPasswordModal ->
       { model | modal = Just NewPassword } ! []
@@ -220,7 +225,7 @@ update msg model =
 
     IncrementIdleTime _ ->
       if model.idleTime + 1 > model.config.maxIdleTime then
-        logout model ! []
+        logout model ! [ focusMasterKeyInputCmd ]
       else
         { model | idleTime = model.idleTime + 1 } ! []
 
