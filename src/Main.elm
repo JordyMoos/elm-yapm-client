@@ -171,8 +171,11 @@ update msg model =
     UploadLibraryResponse (Ok message) ->
       { model | error = Just <| "Upload success: " ++ message } ! []
 
-    UploadLibraryResponse (Err _) ->
-      { model | error = Just "Upload error" } ! []
+    UploadLibraryResponse (Err errorValue) ->
+      let
+        _ = Debug.log "Response error" (toString errorValue)
+      in
+        { model | error = Just "Upload error" } ! []
 
     NewLibrary (Ok newLibraryData) ->
       let
@@ -289,7 +292,15 @@ encodeLibraryData libraryData =
 
 uploadLibraryCmd : String -> UploadLibraryContent -> Cmd Msg
 uploadLibraryCmd apiEndPoint libraryContent =
-  Http.post apiEndPoint (uploadLibraryBody libraryContent) Decode.string
+  Http.request
+    { method = "POST"
+    , headers = [ Http.header "Content-Type" "application/x-www-form-urlencoded" ]
+    , url = apiEndPoint
+    , body = (uploadLibraryBody libraryContent)
+    , expect = Http.expectString
+    , timeout = Just (Time.second * 20)
+    , withCredentials = False
+    }
     |> Http.send UploadLibraryResponse
 
 
