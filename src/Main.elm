@@ -102,6 +102,7 @@ type Modal
   = EditPassword
   | NewPassword
   | NewMasterKey
+  | DeletePasswordConfirmation Int
 
 
 initModel : Flags -> Model
@@ -167,6 +168,8 @@ type Msg
   | ResetIdleTime Mouse.Position
   | EncryptLibrary
   | TogglePasswordVisibility Int
+  | AskDeletePassword Int
+  | ConfirmDeletePassword Int
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -260,10 +263,7 @@ update msg model =
       { model | idleTime = 0 } ! []
 
     EncryptLibrary ->
-      model !
-        [ EncryptLibraryDataContent model.masterKey model.libraryData model.masterKey (unwrapPasswords model.passwords)
-            |> encryptLibraryData
-        ]
+      model ! [ createEncryptLibraryCmd model ]
 
     TogglePasswordVisibility id ->
       let
@@ -275,6 +275,18 @@ update msg model =
       in
         { model | passwords = List.map updatePassword model.passwords } ! []
 
+    AskDeletePassword id ->
+      { model | modal = Just (DeletePasswordConfirmation id) } ! []
+
+    ConfirmDeletePassword id ->
+      let
+        newModel =
+          { model
+            | passwords = List.filter (\password -> password.id /= id) model.passwords
+            , modal = Nothing
+          }
+      in
+        newModel ! [ createEncryptLibraryCmd newModel ]
 
 port parseLibraryData : ParseLibraryDataContent -> Cmd msg
 
@@ -381,6 +393,12 @@ unwrapPasswords wrappedPasswords =
   List.map (\wrapper -> wrapper.password) wrappedPasswords
 
 
+createEncryptLibraryCmd : Model -> Cmd Msg
+createEncryptLibraryCmd model =
+  EncryptLibraryDataContent model.masterKey model.libraryData model.masterKey (unwrapPasswords model.passwords)
+    |> encryptLibraryData
+
+
 view : Model -> Html Msg
 view model =
   if model.isAuthenticated then
@@ -425,16 +443,6 @@ viewLoginForm model =
         ]
     , viewError model.error
     ]
-
-
-viewLibraryData : Maybe LibraryData -> Html Msg
-viewLibraryData libraryData =
-  case libraryData of
-    Just data ->
-      p [] [ text data.library ]
-
-    Nothing ->
-      text ""
 
 
 viewError : Maybe String -> Html Msg
@@ -531,7 +539,7 @@ viewPassword {password, id, isVisible} =
             [ i [ class "icon-eye" ] [] ]
         , a [ class "editPassword" ]
             [ i [ class "icon-edit" ] [] ]
-        , a [ class "deletePassword" ]
+        , a [ class "deletePassword", onClick (AskDeletePassword id) ]
             [ i [ class "icon-trash" ] [] ]
         ]
     ]
@@ -556,6 +564,11 @@ viewModal model =
 
     Just NewMasterKey ->
       viewNewMasterKeyModal model
+
+    Just (DeletePasswordConfirmation id) ->
+      List.filter (\password -> password.id == id) model.passwords
+        |> List.head
+        |> viewDeletePasswordConfirmation
 
     Nothing ->
       text ""
@@ -583,6 +596,33 @@ viewModalHeader title =
       , h4 [ class "modal-title", id "modalHeader" ]
           [ text title ]
       ]
+
+
+viewDeletePasswordConfirmation : Maybe WrappedPassword -> Html Msg
+viewDeletePasswordConfirmation password =
+  case password of
+    Just password ->
+      viewModalContainer
+        [ viewModalHeader "Delete Password"
+        , viewDeletePasswordContent password
+        , div [ class "modal-footer" ]
+            [ a [ class "btn btn-default", onClick CloseModal ]
+                [ text "No Cancel" ]
+            , a [ class "btn btn-danger", onClick (ConfirmDeletePassword password.id) ]
+                [ text "Yes Delete" ]
+            ]
+        ]
+
+    Nothing ->
+      text ""
+
+
+viewDeletePasswordContent : WrappedPassword -> Html Msg
+viewDeletePasswordContent password =
+  div [ class "modal-body" ]
+    [ p []
+        [ text "Are you sure you want to delete this password?" ]
+    ]
 
 
 viewNewPasswordModal : Model -> Html Msg
