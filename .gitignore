@@ -2,3 +2,5 @@ elm-stuff
 node_modules
 build
 elm.js
+/index.html
+/manifest.appcache
