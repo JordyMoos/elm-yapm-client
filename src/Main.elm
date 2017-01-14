@@ -35,7 +35,7 @@ type alias Flags =
 type alias Model =
   { config : Flags
   , masterKeyInput : String
-  , masterKey : Maybe String
+  , masterKey : Maybe MasterKey
   , isDownloading : Bool
   , libraryData : Maybe LibraryData
   , error : Maybe String
@@ -44,6 +44,7 @@ type alias Model =
   , modal : Maybe Modal
   , idleTime : Int
   , uid : Int
+  , newMasterKeyForm : MasterKeyForm
   }
 
 
@@ -62,15 +63,15 @@ type alias LibraryData =
 
 
 type alias ParseLibraryDataContent =
-  { masterKey : Maybe String
+  { masterKey : Maybe MasterKey
   , libraryData : Maybe LibraryData
   }
 
 
 type alias EncryptLibraryDataContent =
-  { oldMasterKey : Maybe String
+  { oldMasterKey : Maybe MasterKey
   , oldLibraryData : Maybe LibraryData
-  , newMasterKey : Maybe String
+  , newMasterKey : Maybe MasterKey
   , passwords : List Password
   }
 
@@ -98,10 +99,17 @@ type alias WrappedPassword =
   }
 
 
+type alias MasterKeyForm =
+  { masterKey : String
+  , masterKeyRepeat : String
+  }
+
+
 type Modal
   = EditPassword
   | NewPassword
   | NewMasterKey
+  | NewMasterKeyConfirmation
   | DeletePasswordConfirmation Int
 
 
@@ -109,6 +117,9 @@ type alias ElementId = String
 
 
 type alias PasswordId = Int
+
+
+type alias MasterKey = String
 
 
 initModel : Flags -> Model
@@ -124,6 +135,7 @@ initModel flags =
   , modal = Nothing
   , idleTime = 0
   , uid = 0
+  , newMasterKeyForm = MasterKeyForm "" ""
   }
 
 
@@ -159,7 +171,7 @@ type Msg
   = NoOp
   | DownloadLibrary
   | UploadLibrary UploadLibraryContent
-  | UploadLibraryResponse (Maybe LibraryData) (Result Http.Error String)
+  | UploadLibraryResponse (Maybe LibraryData) (Maybe MasterKey) (Result Http.Error String)
   | NewLibrary (Result Http.Error LibraryData)
   | SetMasterKeyInput String
   | SubmitAuthForm
@@ -177,6 +189,10 @@ type Msg
   | AskDeletePassword Int
   | ConfirmDeletePassword PasswordId
   | CopyPasswordToClipboard ElementId
+  | NewMasterKeyInput String
+  | NewMasterKeyRepeatInput String
+  | NewMasterKeySubmit
+  | ConfirmNewMasterKey
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -191,21 +207,26 @@ update msg model =
     UploadLibrary uploadLibraryContent ->
       let
         _ = Debug.log "Hash Old" uploadLibraryContent.oldHash
+        _ = Debug.log "Hash New" uploadLibraryContent.newHash
         _ = Debug.log "Library" uploadLibraryContent.libraryData.library
       in
         { model | libraryData = Just uploadLibraryContent.libraryData }
-          ! [ uploadLibraryCmd model.config.apiEndPoint uploadLibraryContent model.libraryData ]
+          ! [ uploadLibraryCmd model.config.apiEndPoint uploadLibraryContent model.libraryData model.masterKey ]
 
-    UploadLibraryResponse _ (Ok message) ->
-      { model | error = Just <| "Upload success: " ++ message } ! []
+    UploadLibraryResponse _ _ (Ok message) ->
+      let
+        _ = Debug.log "Upload success" message
+      in
+        model ! []
 
-    UploadLibraryResponse previousLibraryData (Err errorValue) ->
+    UploadLibraryResponse previousLibraryData previousMasterKey (Err errorValue) ->
       let
         _ = Debug.log "Response error" (toString errorValue)
       in
         { model
           | error = Just "Upload error"
           , libraryData = previousLibraryData
+          , masterKey = previousMasterKey
         }
           ! []
 
@@ -275,7 +296,7 @@ update msg model =
       { model | idleTime = 0 } ! []
 
     EncryptLibrary ->
-      model ! [ createEncryptLibraryCmd model ]
+      model ! [ createEncryptLibraryCmd model Nothing ]
 
     TogglePasswordVisibility id ->
       let
@@ -298,10 +319,51 @@ update msg model =
             , modal = Nothing
           }
       in
-        newModel ! [ createEncryptLibraryCmd newModel ]
+        newModel ! [ createEncryptLibraryCmd newModel Nothing ]
 
     CopyPasswordToClipboard elementId ->
       model ! [ copyPasswordToClipboard elementId ]
+
+    NewMasterKeyInput value ->
+      let
+        masterKeyForm = model.newMasterKeyForm
+        newMasterKeyForm = { masterKeyForm | masterKey = value }
+      in
+        { model | newMasterKeyForm = newMasterKeyForm } ! []
+
+    NewMasterKeyRepeatInput value ->
+      let
+        masterKeyForm = model.newMasterKeyForm
+        newMasterKeyForm = { masterKeyForm | masterKeyRepeat = value }
+      in
+        { model | newMasterKeyForm = newMasterKeyForm } ! []
+
+    NewMasterKeySubmit ->
+      if not (isNewMasterKeyFormValid model.newMasterKeyForm) then
+        { model | error = Just "Master key form is not valid" } ! []
+      else
+        { model | modal = Just NewMasterKeyConfirmation } ! []
+
+    ConfirmNewMasterKey ->
+      if not (isNewMasterKeyFormValid model.newMasterKeyForm) then
+        { model | error = Just "Master key form is not valid" } ! []
+      else
+        { model
+          | newMasterKeyForm = MasterKeyForm "" ""
+          , masterKey = Just model.newMasterKeyForm.masterKey
+          , modal = Nothing
+        }
+          ! [ createEncryptLibraryCmd model (Just model.newMasterKeyForm.masterKey) ]
+
+
+isNewMasterKeyFormValid : MasterKeyForm -> Bool
+isNewMasterKeyFormValid form =
+  if (String.length form.masterKey) < 3 then
+    False
+  else if form.masterKey /= form.masterKeyRepeat then
+    False
+  else
+    True
 
 
 port parseLibraryData : ParseLibraryDataContent -> Cmd msg
@@ -365,8 +427,8 @@ encodeLibraryData libraryData =
     |> Encode.encode 0
 
 
-uploadLibraryCmd : String -> UploadLibraryContent -> Maybe LibraryData -> Cmd Msg
-uploadLibraryCmd apiEndPoint libraryContent oldLibraryData =
+uploadLibraryCmd : String -> UploadLibraryContent -> Maybe LibraryData -> Maybe MasterKey -> Cmd Msg
+uploadLibraryCmd apiEndPoint libraryContent oldLibraryData oldMasterKey =
   Http.request
     { method = "POST"
     , headers = [ Http.header "Content-Type" "application/x-www-form-urlencoded" ]
@@ -376,15 +438,21 @@ uploadLibraryCmd apiEndPoint libraryContent oldLibraryData =
     , timeout = Just (Time.second * 20)
     , withCredentials = False
     }
-    |> Http.send (UploadLibraryResponse oldLibraryData)
+    |> Http.send (UploadLibraryResponse oldLibraryData oldMasterKey)
 
 
 uploadLibraryBody : UploadLibraryContent -> Http.Body
-uploadLibraryBody libraryContent =
+uploadLibraryBody {oldHash, newHash, libraryData} =
   let
-    encodedLibrary = encodeLibraryData libraryContent.libraryData
+    addNewHashIfChanged oldHash newHash =
+      if oldHash == newHash then
+        ""
+      else
+        "&newhash=" ++ newHash
+
+    encodedLibrary = encodeLibraryData libraryData
       |> Http.encodeUri
-    params = "pwhash=" ++ libraryContent.oldHash ++ "&newlib=" ++ encodedLibrary
+    params = "pwhash=" ++ oldHash ++ "&newlib=" ++ encodedLibrary ++ (addNewHashIfChanged oldHash newHash)
   in
     Http.stringBody "application/x-www-form-urlencoded" params
 
@@ -411,9 +479,13 @@ unwrapPasswords wrappedPasswords =
   List.map (\wrapper -> wrapper.password) wrappedPasswords
 
 
-createEncryptLibraryCmd : Model -> Cmd Msg
-createEncryptLibraryCmd model =
-  EncryptLibraryDataContent model.masterKey model.libraryData model.masterKey (unwrapPasswords model.passwords)
+createEncryptLibraryCmd : Model -> Maybe MasterKey -> Cmd Msg
+createEncryptLibraryCmd model newMasterKey =
+  EncryptLibraryDataContent
+    model.masterKey
+    model.libraryData
+    (Maybe.withDefault model.masterKey (Just newMasterKey)) -- Ugly line could be better
+    (unwrapPasswords model.passwords)
     |> encryptLibraryData
 
 
@@ -592,6 +664,9 @@ viewModal model =
     Just NewMasterKey ->
       viewNewMasterKeyModal model
 
+    Just NewMasterKeyConfirmation ->
+      viewNewMasterKeyConfirmationModal
+
     Just (DeletePasswordConfirmation id) ->
       List.filter (\password -> password.id == id) model.passwords
         |> List.head
@@ -673,13 +748,17 @@ viewNewPasswordModal model =
 viewNewPasswordForm : Model -> Html Msg
 viewNewPasswordForm model =
   Html.form [ class "modal-body form-horizontal" ]
-    [ viewFormInput "title" "Title" "text"
-    , viewFormInput "URL" "URL" "text"
-    , viewFormInput "username" "Username" "text"
-    , viewFormInput "pass" "Password" "password"
-    , viewFormInput "passRepeat" "Password Repeat" "password"
-    , viewFormTextarea "comment" "Comment"
-    ]
+    --
+    -- Off for now because it is just visual an no longer compatible with the viewFormInput function
+    --
+    -- [ viewFormInput "title" "Title" "text"
+    -- , viewFormInput "URL" "URL" "text"
+    -- , viewFormInput "username" "Username" "text"
+    -- , viewFormInput "pass" "Password" "password"
+    -- , viewFormInput "passRepeat" "Password Repeat" "password"
+    -- , viewFormTextarea "comment" "Comment"
+    -- ]
+    []
 
 
 viewNewMasterKeyModal : Model -> Html Msg
@@ -688,7 +767,7 @@ viewNewMasterKeyModal model =
     [ viewModalHeader "New Master Key"
     , viewNewMasterKeyForm model
     , div [ class "modal-footer" ]
-        [ a [ class "btn btn-primary" ]
+        [ a [ class "btn btn-primary", onClick NewMasterKeySubmit ]
             [ i [ class "icon-attention" ] []
             , text "Save"
             ]
@@ -699,18 +778,46 @@ viewNewMasterKeyModal model =
 viewNewMasterKeyForm : Model -> Html Msg
 viewNewMasterKeyForm model =
   Html.form [ class "modal-body form-horizontal" ]
-    [ viewFormInput "key" "New Master Key" "password"
-    , viewFormInput "keyRepeat" "Master Key Repeat" "password"
+    [ viewFormInput "key" "New Master Key" "password" model.newMasterKeyForm.masterKey (NewMasterKeyInput)
+    , viewFormInput "keyRepeat" "Master Key Repeat" "password" model.newMasterKeyForm.masterKeyRepeat (NewMasterKeyRepeatInput)
     ]
 
 
-viewFormInput : String -> String -> String -> Html Msg
-viewFormInput inputId title inputType =
-  div [ class "form-group" ]
-    [ label [ class "col-sm-4 control-label", for inputId ]
-        [ text title ]
-    , div [ class "col-sm-8" ]
-        [ input [ attribute "type" inputType, class "form-control", id inputId ] [] ]
+viewNewMasterKeyConfirmationModal : Html Msg
+viewNewMasterKeyConfirmationModal =
+  viewModalContainer
+    [ viewModalHeader "New Master Key Confirmation"
+    , div [ class "modal-body" ]
+      [ p []
+        [ text "Are you sure you want to create a new master key?" ]
+      ]
+    , div [ class "modal-footer" ]
+        [ a [ class "btn btn-default", onClick CloseModal ]
+            [ text "No Cancel" ]
+        , a [ class "btn btn-danger", onClick ConfirmNewMasterKey ]
+            [ text "Yes Create" ]
+        ]
+    ]
+
+
+viewFormInput : String -> String -> String -> String -> (String -> Msg) -> Html Msg
+viewFormInput inputId title inputType inputValue onInputAction =
+  div
+    [ class "form-group" ]
+    [ label
+      [ class "col-sm-4 control-label", for inputId ]
+      [ text title ]
+    , div
+      [ class "col-sm-8" ]
+      [ input
+        [ attribute "type" inputType
+        , value inputValue
+        , onInput onInputAction
+        , class "form-control"
+        , id inputId
+        ]
+        []
+      ]
     ]
 
 
