@@ -105,7 +105,6 @@ type Modal
   | DeletePasswordConfirmation Int
 
 
-
 type alias ElementId = String
 
 
@@ -160,7 +159,7 @@ type Msg
   = NoOp
   | DownloadLibrary
   | UploadLibrary UploadLibraryContent
-  | UploadLibraryResponse (Result Http.Error String)
+  | UploadLibraryResponse (Maybe LibraryData) (Result Http.Error String)
   | NewLibrary (Result Http.Error LibraryData)
   | SetMasterKeyInput String
   | SubmitAuthForm
@@ -194,16 +193,21 @@ update msg model =
         _ = Debug.log "Hash Old" uploadLibraryContent.oldHash
         _ = Debug.log "Library" uploadLibraryContent.libraryData.library
       in
-        { model | libraryData = Just uploadLibraryContent.libraryData } ! [ uploadLibraryCmd model.config.apiEndPoint uploadLibraryContent ]
+        { model | libraryData = Just uploadLibraryContent.libraryData }
+          ! [ uploadLibraryCmd model.config.apiEndPoint uploadLibraryContent model.libraryData ]
 
-    UploadLibraryResponse (Ok message) ->
+    UploadLibraryResponse _ (Ok message) ->
       { model | error = Just <| "Upload success: " ++ message } ! []
 
-    UploadLibraryResponse (Err errorValue) ->
+    UploadLibraryResponse previousLibraryData (Err errorValue) ->
       let
         _ = Debug.log "Response error" (toString errorValue)
       in
-        { model | error = Just "Upload error" } ! []
+        { model
+          | error = Just "Upload error"
+          , libraryData = previousLibraryData
+        }
+          ! []
 
     NewLibrary (Ok newLibraryData) ->
       let
@@ -361,8 +365,8 @@ encodeLibraryData libraryData =
     |> Encode.encode 0
 
 
-uploadLibraryCmd : String -> UploadLibraryContent -> Cmd Msg
-uploadLibraryCmd apiEndPoint libraryContent =
+uploadLibraryCmd : String -> UploadLibraryContent -> Maybe LibraryData -> Cmd Msg
+uploadLibraryCmd apiEndPoint libraryContent oldLibraryData =
   Http.request
     { method = "POST"
     , headers = [ Http.header "Content-Type" "application/x-www-form-urlencoded" ]
@@ -372,7 +376,7 @@ uploadLibraryCmd apiEndPoint libraryContent =
     , timeout = Just (Time.second * 20)
     , withCredentials = False
     }
-    |> Http.send UploadLibraryResponse
+    |> Http.send (UploadLibraryResponse oldLibraryData)
 
 
 uploadLibraryBody : UploadLibraryContent -> Http.Body
