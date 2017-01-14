@@ -61,6 +61,8 @@
             app.ports.error.send(getErrorMessage(error));
           });
       });
+
+      app.ports.copyPasswordToClipboard.subscribe(window.yapm.copyPasswordToClipboard);
     </script>
 </body>
 

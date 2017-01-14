@@ -26,9 +26,15 @@ function encryptLibrary (request) {
   return Promise.all([oldHashPromise, libraryPromise, newHashPromise]);
 }
 
+function copyPasswordToClipboard (fieldId) {
+  console.log('Field id:');
+  console.log(fieldId);
+}
+
 window.yapm = {
   config: config,
   generateRandomPassword: generateRandomPassword,
   decryptLibrary: decryptLibrary,
   encryptLibrary: encryptLibrary,
+  copyPasswordToClipboard: copyPasswordToClipboard,
 };

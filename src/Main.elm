@@ -105,6 +105,13 @@ type Modal
   | DeletePasswordConfirmation Int
 
 
+
+type alias ElementId = String
+
+
+type alias PasswordId = Int
+
+
 initModel : Flags -> Model
 initModel flags =
   { config = flags
@@ -169,7 +176,8 @@ type Msg
   | EncryptLibrary
   | TogglePasswordVisibility Int
   | AskDeletePassword Int
-  | ConfirmDeletePassword Int
+  | ConfirmDeletePassword PasswordId
+  | CopyPasswordToClipboard ElementId
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -288,6 +296,10 @@ update msg model =
       in
         newModel ! [ createEncryptLibraryCmd newModel ]
 
+    CopyPasswordToClipboard elementId ->
+      model ! [ copyPasswordToClipboard elementId ]
+
+
 port parseLibraryData : ParseLibraryDataContent -> Cmd msg
 
 port error : (String -> msg) -> Sub msg
@@ -297,6 +309,8 @@ port passwords : (List Password -> msg) -> Sub msg
 port encryptLibraryData : EncryptLibraryDataContent -> Cmd msg
 
 port uploadLibrary : (UploadLibraryContent -> msg) -> Sub msg
+
+port copyPasswordToClipboard : ElementId -> Cmd msg
 
 
 subscriptions : Model -> Sub Msg
@@ -529,11 +543,11 @@ viewPassword : WrappedPassword -> Html Msg
 viewPassword {password, id, isVisible} =
   tr [ Html.Attributes.id ("password-" ++ (toString id)) ]
     [ td [] [ text password.title ]
-    , td [] [ div [ class (getPasswordVisibility isVisible) ] [ text password.username ] ]
-    , td [] [ div [ class (getPasswordVisibility isVisible) ] [ text password.password ] ]
+    , td [] [ viewObscuredField ("password-username-" ++ (toString id)) password.username isVisible ]
+    , td [] [ viewObscuredField ("password-password-" ++ (toString id)) password.password isVisible ]
     , td [] [ div [ class "comment" ] [ text password.comment ] ]
     , td []
-        [ a [ class "copyPassword" ]
+        [ a [ class "copyPassword", onClick (CopyPasswordToClipboard ("password-password-" ++ (toString id))) ]
             [ i [ class "icon-docs" ] [] ]
         , a [ class "toggleVisibility", onClick (TogglePasswordVisibility id) ]
             [ i [ class "icon-eye" ] [] ]
@@ -543,6 +557,15 @@ viewPassword {password, id, isVisible} =
             [ i [ class "icon-trash" ] [] ]
         ]
     ]
+
+
+viewObscuredField : String -> String -> Bool -> Html Msg
+viewObscuredField fieldId message isVisible =
+  div
+    [ class (getPasswordVisibility isVisible)
+    , id fieldId
+    ]
+    [ text message ]
 
 
 getPasswordVisibility : Bool -> String
