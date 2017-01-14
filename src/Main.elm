@@ -676,9 +676,25 @@ viewModal model =
       text ""
 
 
+onSelfClickWithId : String -> List (Attribute Msg)
+onSelfClickWithId elementId =
+  [ id elementId
+  , on "click" <|
+      Decode.map
+        (\msg ->
+          if msg == elementId then 
+            CloseModal
+          else
+            NoOp
+        )
+        (Decode.at ["target", "id"] Decode.string)
+  ]
+
+
 viewModalContainer : List (Html Msg) -> Html Msg
 viewModalContainer html =
-  div [ class "modal visible-modal", id "modal" ]
+  div 
+    ( onSelfClickWithId "modal" ++ [ class "modal visible-modal" ] )
     [ div [ class "modal-dialog" ]
         [ div [ class "modal-content" ]
             html
