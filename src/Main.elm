@@ -45,6 +45,7 @@ type alias Model =
   , idleTime : Int
   , uid : Int
   , newMasterKeyForm : MasterKeyForm
+  , filter : String
   }
 
 
@@ -136,6 +137,7 @@ initModel flags =
   , idleTime = 0
   , uid = 0
   , newMasterKeyForm = MasterKeyForm "" ""
+  , filter = ""
   }
 
 
@@ -193,6 +195,7 @@ type Msg
   | NewMasterKeyRepeatInput String
   | NewMasterKeySubmit
   | ConfirmNewMasterKey
+  | UpdateFilter String
 
 
 update : Msg -> Model -> (Model, Cmd Msg)
@@ -354,6 +357,9 @@ update msg model =
           , modal = Nothing
         }
           ! [ createEncryptLibraryCmd model (Just model.newMasterKeyForm.masterKey) ]
+
+    UpdateFilter newFilter ->
+      { model | filter = newFilter, idleTime = 0 } ! []
 
 
 port parseLibraryData : ParseLibraryDataContent -> Cmd msg
@@ -569,7 +575,14 @@ viewNavBar model =
     , div [ class "navbar" ]
         [ div [ class "navbar-form navbar-right", attribute "role" "form" ]
             [ div [ class "form-group" ]
-                [ input [ id "filter", placeholder "Filter... <CTRL+E>", class "flter-control" ] [] ]
+                [ input [
+                    id "filter"
+                    , placeholder "Filter... <CTRL+E>"
+                    , class "flter-control" 
+                    , onInput UpdateFilter
+                  ]
+                  []
+                ]
             , text " "
             , button [ class "save btn", onClick EncryptLibrary ]
                 [ i [ class "icon-floppy" ] []
@@ -605,14 +618,18 @@ viewPasswordTable model =
                 , th [] [ text "Actions" ]
                 ]
             ]
-        , viewPasswords model.passwords
+        , viewPasswords model.filter model.passwords
         ]
     ]
 
+passwordFilter : String -> WrappedPassword -> Bool
+passwordFilter filter password =
+  List.all (\subfilter -> String.contains subfilter <| String.toLower password.password.title) <| String.split " " filter 
 
-viewPasswords : List WrappedPassword -> Html Msg
-viewPasswords passwords =
-  tbody [] (List.map viewPassword passwords)
+
+viewPasswords : String -> List WrappedPassword -> Html Msg
+viewPasswords filter passwords =
+  tbody [] (List.map viewPassword <| List.filter (passwordFilter <| String.toLower filter) passwords)
 
 
 viewPassword : WrappedPassword -> Html Msg
