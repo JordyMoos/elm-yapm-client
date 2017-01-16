@@ -2,8 +2,6 @@ module NewMasterKey.Msg exposing (..)
 
 
 type Msg
-  = NoOp
-  | FieldInput String String
+  = FieldInput String String
   | Submit
   | SubmitConfirmation
-  | Close

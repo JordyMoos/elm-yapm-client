@@ -2,8 +2,8 @@ module NewMasterKey.Update exposing (update)
 
 import Dict exposing (Dict)
 
-import NewMasterKey.Msg exposing (Msg(..))
-import Msg as MainMsg
+import NewMasterKey.Msg as NewMasterKeyMsg exposing (..)
+import Msg
 import Cmd exposing
   ( createEncryptLibraryCmd
   , decryptLibraryIfPossibleCmd
@@ -12,15 +12,9 @@ import Model exposing (Model, Modal(NewMasterKeyConfirmation))
 import NewMasterKey.Model exposing (Fields, initModel)
 
 
-update : Msg -> Model -> (Model, Cmd MainMsg.Msg)
+update : NewMasterKeyMsg.Msg -> Model -> (Model, Cmd Msg.Msg)
 update msg model =
   case msg of
-    NoOp ->
-      model ! []
-
-    Close ->
-      { model | modal = Nothing } ! []
-
     FieldInput name value ->
       let
         newFields = Dict.update name (Maybe.map <| fieldUpdate value ) model.newMasterKeyForm.fields

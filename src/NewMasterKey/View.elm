@@ -7,32 +7,37 @@ import Json.Decode as Decode
 import Dict exposing (Dict)
 
 import Model exposing (..)
-import NewMasterKey.Msg exposing (..)
-import Msg as MainMsg
+import NewMasterKey.Msg as NewMasterKeyMsg
+import Msg exposing (Msg(MsgForNewMasterKey, CloseModal, NoOp))
 
 
-viewModal : Model -> Html MainMsg.Msg
+viewModal : Model -> Html Msg
 viewModal model =
-  viewNewMasterKeyModal model
-    |> Html.map MainMsg.MsgForNewMasterKey
-
-
-viewConfirmationModal : Model -> Html MainMsg.Msg
-viewConfirmationModal model =
-  viewNewMasterKeyConfirmationModal
-    |> Html.map MainMsg.MsgForNewMasterKey
-
-
-viewNewMasterKeyModal : Model -> Html Msg
-viewNewMasterKeyModal model =
   viewModalContainer
     [ viewModalHeader "New Master Key"
     , viewNewMasterKeyForm model
     , div [ class "modal-footer" ]
-        [ a [ class "btn btn-primary", onClick Submit ]
+        [ a [ class "btn btn-primary", onClick (MsgForNewMasterKey NewMasterKeyMsg.Submit) ]
             [ i [ class "icon-attention" ] []
             , text "Save"
             ]
+        ]
+    ]
+
+
+viewConfirmationModal : Model -> Html Msg
+viewConfirmationModal model =
+  viewModalContainer
+    [ viewModalHeader "New Master Key Confirmation"
+    , div [ class "modal-body" ]
+      [ p []
+        [ text "Are you sure you want to create a new master key?" ]
+      ]
+    , div [ class "modal-footer" ]
+        [ a [ class "btn btn-default", onClick CloseModal ]
+            [ text "No Cancel" ]
+        , a [ class "btn btn-danger", onClick (MsgForNewMasterKey NewMasterKeyMsg.SubmitConfirmation) ]
+            [ text "Yes Create" ]
         ]
     ]
 
@@ -42,7 +47,7 @@ viewModalHeader title =
   div [ class "modal-header" ]
       [ button
           [ class "close"
-          , onClick Close
+          , onClick CloseModal
           , attribute "aria-hidden" "true"
           ]
           [ text "x" ]
@@ -69,7 +74,7 @@ onSelfClickWithId elementId =
       Decode.map
         (\msg ->
           if msg == elementId then
-            Close
+            CloseModal
           else
             NoOp
         )
@@ -102,7 +107,7 @@ viewFormInput dictName fields title inputType =
               [ input
                 [ attribute "type" inputType
                 , value fieldValue
-                , onInput (FieldInput dictName)
+                , onInput (MsgForNewMasterKey << NewMasterKeyMsg.FieldInput dictName)
                 , class "form-control"
                 , id dictName
                 ]
@@ -112,20 +117,3 @@ viewFormInput dictName fields title inputType =
 
       Nothing ->
         text ""
-
-
-viewNewMasterKeyConfirmationModal : Html Msg
-viewNewMasterKeyConfirmationModal =
-  viewModalContainer
-    [ viewModalHeader "New Master Key Confirmation"
-    , div [ class "modal-body" ]
-      [ p []
-        [ text "Are you sure you want to create a new master key?" ]
-      ]
-    , div [ class "modal-footer" ]
-        [ a [ class "btn btn-default", onClick Close ]
-            [ text "No Cancel" ]
-        , a [ class "btn btn-danger", onClick SubmitConfirmation ]
-            [ text "Yes Create" ]
-        ]
-    ]
