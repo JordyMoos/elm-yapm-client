@@ -119,13 +119,3 @@ createEncryptLibraryCmd model newMasterKey =
     (Maybe.withDefault model.masterKey (Just newMasterKey)) -- Ugly line could be better
     (unwrapPasswords model.passwords)
     |> encryptLibraryData
-
-
-isNewMasterKeyFormValid : MasterKeyForm -> Bool
-isNewMasterKeyFormValid form =
-  if (String.length form.masterKey) < 3 then
-    False
-  else if form.masterKey /= form.masterKeyRepeat then
-    False
-  else
-    True

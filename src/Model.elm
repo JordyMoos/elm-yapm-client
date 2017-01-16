@@ -1,5 +1,8 @@
 module Model exposing (..)
 
+import NewMasterKey.Model
+
+
 type alias Flags =
   { apiEndPoint : String
   , localStorageKey : String
@@ -19,7 +22,7 @@ type alias Model =
   , modal : Maybe Modal
   , idleTime : Int
   , uid : Int
-  , newMasterKeyForm : MasterKeyForm
+  , newMasterKeyForm : NewMasterKey.Model.Model
   , filter : String
   }
 
@@ -75,12 +78,6 @@ type alias WrappedPassword =
   }
 
 
-type alias MasterKeyForm =
-  { masterKey : String
-  , masterKeyRepeat : String
-  }
-
-
 type Modal
   = EditPassword
   | NewPassword
@@ -111,6 +108,6 @@ initModel flags =
   , modal = Nothing
   , idleTime = 0
   , uid = 0
-  , newMasterKeyForm = MasterKeyForm "" ""
+  , newMasterKeyForm = NewMasterKey.Model.initModel
   , filter = ""
   }

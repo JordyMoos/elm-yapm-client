@@ -3,11 +3,11 @@ module NewMasterKey.Update exposing (update)
 import NewMasterKey.Msg exposing (Msg(..))
 import Msg as MainMsg
 import Cmd exposing
-  ( isNewMasterKeyFormValid
-  , createEncryptLibraryCmd
+  ( createEncryptLibraryCmd
   , decryptLibraryIfPossibleCmd
   )
 import Model exposing (..)
+import NewMasterKey.Model exposing (MasterKeyForm)
 
 
 update : Msg -> Model -> (Model, Cmd MainMsg.Msg)
@@ -49,3 +49,13 @@ update msg model =
           , modal = Nothing
         }
           ! [ createEncryptLibraryCmd model (Just model.newMasterKeyForm.masterKey) ]
+
+
+isNewMasterKeyFormValid : MasterKeyForm -> Bool
+isNewMasterKeyFormValid form =
+  if (String.length form.masterKey) < 3 then
+    False
+  else if form.masterKey /= form.masterKeyRepeat then
+    False
+  else
+    True
