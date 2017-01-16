@@ -1,11 +1,16 @@
 module NewMasterKey.Update exposing (update)
 
 import NewMasterKey.Msg exposing (Msg(..))
-import Cmd exposing (isNewMasterKeyFormValid, createEncryptLibraryCmd)
+import Msg as MainMsg
+import Cmd exposing
+  ( isNewMasterKeyFormValid
+  , createEncryptLibraryCmd
+  , decryptLibraryIfPossibleCmd
+  )
 import Model exposing (..)
 
 
-update : Msg -> Model -> (Model, Cmd Msg)
+update : Msg -> Model -> (Model, Cmd MainMsg.Msg)
 update msg model =
   case msg of
     Close ->
@@ -40,4 +45,4 @@ update msg model =
           , masterKey = Just model.newMasterKeyForm.masterKey
           , modal = Nothing
         }
-          ! [] -- [ createEncryptLibraryCmd model (Just model.newMasterKeyForm.masterKey) ]
+          ! [ createEncryptLibraryCmd model (Just model.newMasterKeyForm.masterKey) ]

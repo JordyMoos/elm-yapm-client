@@ -1,4 +1,4 @@
-module NewMasterKey.View exposing (viewModal)
+module NewMasterKey.View exposing (viewModal, viewConfirmationModal)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -12,6 +12,12 @@ import Msg as MainMsg
 viewModal : Model -> Html MainMsg.Msg
 viewModal model =
   viewNewMasterKeyModal model
+    |> Html.map MainMsg.MsgForNewMasterKey
+
+
+viewConfirmationModal : Model -> Html MainMsg.Msg
+viewConfirmationModal model =
+  viewNewMasterKeyConfirmationModal
     |> Html.map MainMsg.MsgForNewMasterKey
 
 

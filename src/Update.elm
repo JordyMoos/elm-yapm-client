@@ -136,10 +136,7 @@ update msg model =
       model ! [ copyPasswordToClipboard elementId ]
 
     MsgForNewMasterKey subMsg ->
-      let
-        ( newModel, cmd ) = NewMasterKey.Update.update subMsg model
-      in
-        ( newModel, Cmd.map MsgForNewMasterKey cmd )
+      NewMasterKey.Update.update subMsg model
 
     UpdateFilter newFilter ->
       { model | filter = newFilter, idleTime = 0 } ! []

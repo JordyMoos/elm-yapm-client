@@ -198,7 +198,7 @@ viewModal model =
       NewMasterKey.View.viewModal model
 
     Just NewMasterKeyConfirmation ->
-      text "Must implement" --viewNewMasterKeyConfirmationModal
+      NewMasterKey.View.viewConfirmationModal model
 
     Just (DeletePasswordConfirmation id) ->
       List.filter (\password -> password.id == id) model.passwords
