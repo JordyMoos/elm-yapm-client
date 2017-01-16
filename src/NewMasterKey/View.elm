@@ -3,6 +3,7 @@ module NewMasterKey.View exposing (viewModal, viewConfirmationModal)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import Json.Decode as Decode
 
 import Model exposing (..)
 import NewMasterKey.Msg exposing (..)
@@ -52,12 +53,27 @@ viewModalHeader title =
 viewModalContainer : List (Html Msg) -> Html Msg
 viewModalContainer html =
   div
-    []
+    ( onSelfClickWithId "modal" ++ [ class "modal visible-modal" ] )
     [ div [ class "modal-dialog" ]
         [ div [ class "modal-content" ]
             html
         ]
     ]
+
+
+onSelfClickWithId : String -> List (Attribute Msg)
+onSelfClickWithId elementId =
+  [ id elementId
+  , on "click" <|
+      Decode.map
+        (\msg ->
+          if msg == elementId then
+            Close
+          else
+            NoOp
+        )
+        (Decode.at ["target", "id"] Decode.string)
+  ]
 
 
 viewNewMasterKeyForm : Model -> Html Msg

@@ -13,6 +13,9 @@ import Model exposing (..)
 update : Msg -> Model -> (Model, Cmd MainMsg.Msg)
 update msg model =
   case msg of
+    NoOp ->
+      model ! []
+
     Close ->
       { model | modal = Nothing } ! []
 
