@@ -3,8 +3,7 @@ module NewMasterKey.Msg exposing (..)
 
 type Msg
   = NoOp
-  | KeyInput String
-  | RepeatInput String
+  | FieldInput String String
   | Submit
   | SubmitConfirmation
   | Close

@@ -1,15 +1,24 @@
-module NewMasterKey.Model exposing (..)
+module NewMasterKey.Model exposing (Model, Fields, initModel)
+
+import Dict exposing (Dict)
 
 
-type alias Model = MasterKeyForm
+type alias Model =
+  { fields : Fields
+  }
+
+type alias Fields = Dict String String
 
 
-type alias MasterKeyForm =
-  { masterKey : String
-  , masterKeyRepeat : String
+initModel : Model
+initModel =
+  { fields = initFields
   }
 
 
-initModel : MasterKeyForm
-initModel =
-  MasterKeyForm "" ""
+initFields : Fields
+initFields =
+  Dict.fromList
+    [ ( "key", "" )
+    , ( "repeat", "" )
+    ]

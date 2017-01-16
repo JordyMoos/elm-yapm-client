@@ -4,6 +4,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Json.Decode as Decode
+import Dict exposing (Dict)
 
 import Model exposing (..)
 import NewMasterKey.Msg exposing (..)
@@ -79,30 +80,38 @@ onSelfClickWithId elementId =
 viewNewMasterKeyForm : Model -> Html Msg
 viewNewMasterKeyForm model =
   Html.form [ class "modal-body form-horizontal" ]
-    [ viewFormInput "key" "New Master Key" "password" model.newMasterKeyForm.masterKey KeyInput
-    , viewFormInput "keyRepeat" "Master Key Repeat" "password" model.newMasterKeyForm.masterKeyRepeat RepeatInput
+    [ viewFormInput "key" model.newMasterKeyForm.fields "New Master Key" "password"
+    , viewFormInput "repeat" model.newMasterKeyForm.fields "Master Key Repeat" "password"
     ]
 
 
-viewFormInput : String -> String -> String -> String -> (String -> Msg) -> Html Msg
-viewFormInput inputId title inputType inputValue onInputAction =
-  div
-    [ class "form-group" ]
-    [ label
-      [ class "col-sm-4 control-label", for inputId ]
-      [ text title ]
-    , div
-      [ class "col-sm-8" ]
-      [ input
-        [ attribute "type" inputType
-        , value inputValue
-        , onInput onInputAction
-        , class "form-control"
-        , id inputId
-        ]
-        []
-      ]
-    ]
+viewFormInput : String -> Dict String String -> String -> String -> Html Msg
+viewFormInput dictName fields title inputType =
+  let
+    maybeFieldValue = Dict.get dictName fields
+  in
+    case maybeFieldValue of
+      Just fieldValue ->
+        div
+          [ class "form-group" ]
+          [ label
+            [ class "col-sm-4 control-label", for dictName ]
+            [ text title ]
+          , div
+              [ class "col-sm-8" ]
+              [ input
+                [ attribute "type" inputType
+                , value fieldValue
+                , onInput (FieldInput dictName)
+                , class "form-control"
+                , id dictName
+                ]
+                []
+              ]
+          ]
+
+      Nothing ->
+        text ""
 
 
 viewNewMasterKeyConfirmationModal : Html Msg

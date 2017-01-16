@@ -1,18 +1,9 @@
 port module Main exposing (main)
 
 import Basics exposing (..)
-import Html exposing (..)
-import Html.Attributes exposing (..)
-import Html.Events exposing (..)
-import Http
-import Json.Decode as Decode
-import Json.Encode as Encode
-import Maybe.Extra exposing (isNothing)
-import Dom
-import Task
+import Html
 import Time
 import Mouse
-import Debug
 
 import Model exposing (..)
 import Msg exposing (..)
