@@ -108,6 +108,9 @@ module.exports = function(grunt) {
         },
 
         elm: {
+            options: {
+              debug: true
+            },
             compile: {
                 files: {
                     'build/js/elm.js': [
@@ -160,5 +163,4 @@ module.exports = function(grunt) {
         'htmlmin',
         'manifest'
     ]);
-
 };
