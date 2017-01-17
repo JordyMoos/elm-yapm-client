@@ -110,7 +110,10 @@ module.exports = function(grunt) {
         elm: {
             compile: {
                 files: {
-                    'build/js/elm.js': 'src/*.elm'
+                    'build/js/elm.js': [
+                        'src/*.elm',
+                        'src/*/*.elm'
+                    ]
                 }
             }
         }
