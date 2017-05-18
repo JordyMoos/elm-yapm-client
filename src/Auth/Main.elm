@@ -1,7 +1,5 @@
 module Auth exposing (..)
 
-import Msg exposing (Msg(NoOp))
-
 
 type alias Model =
     { passwords : List WrappedPassword
@@ -12,6 +10,30 @@ type alias Model =
     , masterKey : MasterKey
     , newMasterKeyForm : NewMasterKey.Model.Model
     }
+
+
+type alias Password =
+    { comment : String
+    , password : String
+    , title : String
+    , url : String
+    , username : String
+    }
+
+
+type alias WrappedPassword =
+    { password : Password
+    , id : Int
+    , isVisible : Bool
+    }
+
+
+type Modal
+    = EditPassword
+    | NewPassword
+    | NewMasterKey
+    | NewMasterKeyConfirmation
+    | DeletePasswordConfirmation Int
 
 
 type Msg

@@ -1,6 +1,11 @@
 module Unauth exposing (..)
 
-import Msg exposing (NoOp)
+import Flags exposing (Flags)
+import Task
+import Dom
+import Http
+import Json.Decode as Decode
+import Ports
 
 
 type alias Model =
@@ -19,6 +24,12 @@ type Msg
     | SubmitAuthForm
     | SetError String
     | ClearError
+
+
+type alias LibraryData =
+    { library : String
+    , hmac : String
+    }
 
 
 init : Flags -> ( Model, Cmd Msg )
@@ -41,10 +52,14 @@ downloadLibraryCmd apiEndPoint =
     Http.send NewLibrary (Http.get apiEndPoint decodeLibraryData)
 
 
+decodeLibraryData =
+    Decode.map2 LibraryData (Decode.field "library" Decode.string) (Decode.field "hmac" Decode.string)
+
+
 subscriptions : Sub Msg
 subscriptions =
     Sub.batch
-        [ error SetError
+        [ Ports.error SetError
         , passwords SetPasswords
         ]
 
