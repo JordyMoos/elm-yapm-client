@@ -89,7 +89,7 @@ module.exports = function(grunt) {
 
         watch: {
             src: {
-                files: ['assets/**', 'config.json'],
+                files: ['assets/**', 'config.json', 'src/**'],
                 tasks: ['default'],
                 options: {
                     debounceDelay: 2500
