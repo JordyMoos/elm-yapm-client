@@ -11,24 +11,6 @@ import Model exposing (..)
 import Msg exposing (..)
 
 
-port parseLibraryData : ParseLibraryDataContent -> Cmd msg
-
-
-port error : (String -> msg) -> Sub msg
-
-
-port passwords : (List Password -> msg) -> Sub msg
-
-
-port encryptLibraryData : EncryptLibraryDataContent -> Cmd msg
-
-
-port uploadLibrary : (UploadLibraryContent -> msg) -> Sub msg
-
-
-port copyPasswordToClipboard : ElementId -> Cmd msg
-
-
 logout : Model -> Model
 logout model =
     { model
@@ -37,14 +19,6 @@ logout model =
         , idleTime = 0
         , isAuthenticated = False
     }
-
-
-
--- decodeLibraryData : (a -> b -> value)
-
-
-decodeLibraryData =
-    Decode.map2 LibraryData (Decode.field "library" Decode.string) (Decode.field "hmac" Decode.string)
 
 
 uploadLibraryCmd : String -> UploadLibraryContent -> Maybe LibraryData -> Maybe MasterKey -> Cmd Msg

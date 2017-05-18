@@ -24,12 +24,6 @@ type alias Library =
     }
 
 
-type alias LibraryData =
-    { library : String
-    , hmac : String
-    }
-
-
 type alias ParseLibraryDataContent =
     { masterKey : Maybe MasterKey
     , libraryData : Maybe LibraryData
@@ -49,30 +43,6 @@ type alias UploadLibraryContent =
     , newHash : String
     , libraryData : LibraryData
     }
-
-
-type alias Password =
-    { comment : String
-    , password : String
-    , title : String
-    , url : String
-    , username : String
-    }
-
-
-type alias WrappedPassword =
-    { password : Password
-    , id : Int
-    , isVisible : Bool
-    }
-
-
-type Modal
-    = EditPassword
-    | NewPassword
-    | NewMasterKey
-    | NewMasterKeyConfirmation
-    | DeletePasswordConfirmation Int
 
 
 type alias ElementId =
