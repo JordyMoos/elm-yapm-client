@@ -11,12 +11,8 @@ Run in with php
 ##How to setup dev mode:
 
 Run in one terminal:
-`grunt watch`
-
-
-Run in another terminal:
-`elm-reactor`
+`./run-dev.sh`
 
 
 
-Now goto localhost:8000 and click on index.html
+Now goto localhost:8000 
