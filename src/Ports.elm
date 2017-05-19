@@ -1,19 +1,35 @@
 port module Ports exposing (..)
 
 
-port parseLibraryData : parseLibraryDataContent -> Cmd msg
+type alias LibraryData =
+    { library : String
+    , hmac : String
+    }
+
+
+type alias MasterKey =
+    String
+
+
+type alias ParseLibraryDataContent =
+    { masterKey : Maybe MasterKey
+    , libraryData : Maybe LibraryData
+    }
+
+
+port parseLibraryData : ParseLibraryDataContent -> Cmd msg
 
 
 port error : (String -> msg) -> Sub msg
 
 
-port passwords : (List password -> msg) -> Sub msg
+port passwords : (List String -> msg) -> Sub msg
 
 
-port encryptLibraryData : encryptLibraryDataContent -> Cmd msg
+port encryptLibraryData : EncryptLibraryDataContent -> Cmd msg
 
 
-port uploadLibrary : (uploadLibraryContent -> msg) -> Sub msg
+port uploadLibrary : (UploadLibraryContent -> msg) -> Sub msg
 
 
-port copyPasswordToClipboard : elementId -> Cmd msg
+port copyPasswordToClipboard : ElementId -> Cmd msg
