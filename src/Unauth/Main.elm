@@ -1,4 +1,4 @@
-module Unauth exposing (..)
+module Unauth exposing (Model, Msg, init, subscriptions, update, view)
 
 import Flags exposing (Flags)
 import Task
@@ -10,9 +10,10 @@ import Ports
 
 type alias Model =
     { error : Maybe String
-    , masterKeyInput : String
     , isDownloading : Bool
     , libraryData : Maybe LibraryData
+    , masterKeyInput : String
+    , masterKey : Maybe MasterKey
     }
 
 
@@ -32,28 +33,19 @@ type alias LibraryData =
     }
 
 
+type alias MasterKey =
+    String
+
+
 init : Flags -> ( Model, Cmd Msg )
 init flags =
     { error = Nothing
-    , masterKeyInput = ""
     , isDownloading = False
     , libraryData = Nothing
+    , masterKeyInput = ""
+    , masterKey = Nothing
     }
         ! [ focusMasterKeyInputCmd, downloadLibraryCmd flags.apiEndPoint ]
-
-
-focusMasterKeyInputCmd : Cmd Msg
-focusMasterKeyInputCmd =
-    Task.attempt (\_ -> NoOp) <| Dom.focus "encryptionKey"
-
-
-downloadLibraryCmd : String -> Cmd Msg
-downloadLibraryCmd apiEndPoint =
-    Http.send NewLibrary (Http.get apiEndPoint decodeLibraryData)
-
-
-decodeLibraryData =
-    Decode.map2 LibraryData (Decode.field "library" Decode.string) (Decode.field "hmac" Decode.string)
 
 
 subscriptions : Sub Msg
@@ -62,6 +54,48 @@ subscriptions =
         [ Ports.error SetError
         , passwords SetPasswords
         ]
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
+    case msg of
+        NoOp ->
+            model ! []
+
+        DownloadLibrary ->
+            model ! [ downloadLibraryCmd model.config.apiEndPoint ]
+
+        NewLibrary (Ok newLibraryData) ->
+            let
+                newModel =
+                    { model | libraryData = Just newLibraryData }
+            in
+                newModel ! [ decryptLibraryIfPossibleCmd newModel ]
+
+        NewLibrary (Err _) ->
+            { model | error = Just "Fetching library failed" } ! []
+
+        SetMasterKeyInput masterKeyInput ->
+            { model | masterKeyInput = masterKeyInput } ! []
+
+        SubmitAuthForm ->
+            let
+                masterKey =
+                    Just model.masterKeyInput
+
+                masterKeyInput =
+                    ""
+
+                newModel =
+                    { model | masterKey = masterKey, masterKeyInput = masterKeyInput }
+            in
+                newModel ! [ decryptLibraryIfPossibleCmd newModel ]
+
+        SetError error ->
+            { model | error = Just error } ! []
+
+        ClearError ->
+            { model | error = Nothing } ! []
 
 
 view : ( Flags, Model ) -> Html Msg
@@ -117,43 +151,40 @@ viewError error =
             div [] [ text "[No Error]" ]
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
-    case msg of
-        NoOp ->
-            model ! []
+focusMasterKeyInputCmd : Cmd Msg
+focusMasterKeyInputCmd =
+    Dom.focus "encryptionKey"
+        |> Task.attempt (\_ -> NoOp)
 
-        DownloadLibrary ->
-            model ! [ downloadLibraryCmd model.config.apiEndPoint ]
 
-        NewLibrary (Ok newLibraryData) ->
-            let
-                newModel =
-                    { model | libraryData = Just newLibraryData }
-            in
-                newModel ! [ decryptLibraryIfPossibleCmd newModel ]
+downloadLibraryCmd : String -> Cmd Msg
+downloadLibraryCmd apiEndPoint =
+    Http.send NewLibrary (Http.get apiEndPoint decodeLibraryData)
 
-        NewLibrary (Err _) ->
-            { model | error = Just "Fetching library failed" } ! []
 
-        SetMasterKeyInput masterKeyInput ->
-            { model | masterKeyInput = masterKeyInput } ! []
+decodeLibraryData =
+    Decode.map2 LibraryData (Decode.field "library" Decode.string) (Decode.field "hmac" Decode.string)
 
-        SubmitAuthForm ->
-            let
-                masterKey =
-                    Just model.masterKeyInput
 
-                masterKeyInput =
-                    ""
 
-                newModel =
-                    { model | masterKey = masterKey, masterKeyInput = masterKeyInput }
-            in
-                newModel ! [ decryptLibraryIfPossibleCmd newModel ]
+--
+-- Refactor / Check scripts below
+--
 
-        SetError error ->
-            { model | error = Just error } ! []
 
-        ClearError ->
-            { model | error = Nothing } ! []
+decryptLibraryIfPossibleCmd : Model -> Cmd Msg
+decryptLibraryIfPossibleCmd model =
+    if areDecryptRequirementsMet model then
+        parseLibraryData (ParseLibraryDataContent model.masterKey model.libraryData)
+    else
+        Cmd.none
+
+
+areDecryptRequirementsMet : Model -> Bool
+areDecryptRequirementsMet model =
+    let
+        unMetRequirements =
+            [ isNothing model.masterKey, isNothing model.libraryData ]
+                |> List.filter (\value -> value)
+    in
+        List.length unMetRequirements == 0

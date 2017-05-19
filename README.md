@@ -10,9 +10,13 @@ Run in with php
 
 ##How to setup dev mode:
 
+Install elm modules
+`elm-package install`
+
+
 Run in one terminal:
 `./run-dev.sh`
 
 
 
-Now goto localhost:8000 
+Now goto localhost:8000
