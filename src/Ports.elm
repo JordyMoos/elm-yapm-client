@@ -3,26 +3,12 @@ port module Ports exposing (..)
 import Json.Encode exposing (Value)
 
 
-type alias LibraryData =
-    { library : String
-    , hmac : String
-    }
-
-
 type alias MasterKey =
     String
 
 
 type alias ElementId =
     String
-
-
-type alias Library =
-    { blob : String
-    , libraryVersion : Int
-    , apiVersion : Int
-    , modified : Int
-    }
 
 
 type alias EncryptLibraryDataContent =
@@ -43,15 +29,6 @@ type alias UploadLibraryContent =
 type alias ParseLibraryDataContent =
     { masterKey : Maybe MasterKey
     , libraryData : Maybe LibraryData
-    }
-
-
-type alias Password =
-    { comment : String
-    , password : String
-    , title : String
-    , url : String
-    , username : String
     }
 
 

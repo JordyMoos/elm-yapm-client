@@ -184,7 +184,9 @@ downloadLibraryCmd apiEndPoint =
 
 
 decodeLibraryData =
-    Decode.map2 LibraryData (Decode.field "library" Decode.string) (Decode.field "hmac" Decode.string)
+    Decode.map2 LibraryData
+        (Decode.field "library" Decode.string)
+        (Decode.field "hmac" Decode.string)
 
 
 
