@@ -10,10 +10,12 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Maybe.Extra exposing (isNothing)
+import Data.Notification as Notification
 
 
 type alias Model =
-    { error : Maybe String
+    { flags : Flags
+    , notification : Maybe Notification.Notification
     , isDownloading : Bool
     , libraryData : Maybe LibraryData
     , masterKeyInput : String
@@ -27,8 +29,8 @@ type Msg
     | NewLibrary (Result Http.Error LibraryData)
     | SetMasterKeyInput String
     | SubmitAuthForm
-    | SetError String
-    | ClearError
+    | SetNotification Decode.Value
+    | ClearNotification
 
 
 type alias LibraryData =
@@ -49,7 +51,8 @@ type alias MasterKey =
 
 init : Flags -> ( Model, Cmd Msg )
 init flags =
-    { error = Nothing
+    { flags = flags
+    , notification = Nothing
     , isDownloading = False
     , libraryData = Nothing
     , masterKeyInput = ""
@@ -61,7 +64,7 @@ init flags =
 subscriptions : Sub Msg
 subscriptions =
     Sub.batch
-        [ Ports.error SetError ]
+        [ Ports.notification SetNotification ]
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -71,7 +74,7 @@ update msg model =
             model ! []
 
         DownloadLibrary ->
-            model ! [ downloadLibraryCmd model.config.apiEndPoint ]
+            model ! [ downloadLibraryCmd model.flags.apiEndPoint ]
 
         NewLibrary (Ok newLibraryData) ->
             let
@@ -81,7 +84,11 @@ update msg model =
                 newModel ! [ decryptLibraryIfPossibleCmd newModel ]
 
         NewLibrary (Err _) ->
-            { model | error = Just "Fetching library failed" } ! []
+            let
+                notification =
+                    Notification.initError "Fetching library failed"
+            in
+                { model | notification = Just notification } ! []
 
         SetMasterKeyInput masterKeyInput ->
             { model | masterKeyInput = masterKeyInput } ! []
@@ -99,14 +106,18 @@ update msg model =
             in
                 newModel ! [ decryptLibraryIfPossibleCmd newModel ]
 
-        SetError error ->
-            { model | error = Just error } ! []
+        SetNotification json ->
+            let
+                notification =
+                    Notification.decodeNotificationFromJson json
+            in
+                { model | notification = notification } ! []
 
-        ClearError ->
-            { model | error = Nothing } ! []
+        ClearNotification ->
+            { model | notification = Nothing } ! []
 
 
-view : ( Flags, Model ) -> Html Msg
+view : Model -> Html Msg
 view model =
     section
         [ id "unauthorized" ]
@@ -140,23 +151,25 @@ viewLoginForm model =
                 , text " Decrypt"
                 ]
             ]
-        , viewError model.error
+        , viewNotification model.notification
         ]
 
 
-viewError : Maybe String -> Html Msg
-viewError error =
-    case error of
-        Just message ->
+viewNotification : Maybe Notification.Notification -> Html Msg
+viewNotification notification =
+    case notification of
+        Just notificationData ->
             div []
-                [ text "Error: "
-                , text message
-                , text " "
-                , button [ onClick ClearError ] [ text "[x]" ]
+                [ text <|
+                    notificationData.level
+                        ++ ": "
+                        ++ notificationData.message
+                        ++ " "
+                , button [ onClick ClearNotification ] [ text "[x]" ]
                 ]
 
         Nothing ->
-            div [] [ text "[No Error]" ]
+            div [] [ text "[No Notification]" ]
 
 
 focusMasterKeyInputCmd : Cmd Msg

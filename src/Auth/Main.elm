@@ -1,5 +1,10 @@
 module Auth exposing (..)
 
+import Html exposing (..)
+import Html.Attributes exposing (..)
+import Html.Events exposing (..)
+import Flags exposing (Flags)
+
 
 type alias Model =
     { passwords : List WrappedPassword
@@ -19,6 +24,12 @@ type alias Password =
     , title : String
     , url : String
     , username : String
+    }
+
+
+type alias LibraryData =
+    { library : String
+    , hmac : String
     }
 
 
