@@ -41,10 +41,15 @@
       app.ports.parseLibraryData.subscribe(function (request) {
         window.yapm.decryptLibrary(request)
           .then(function (passwords) {
-            app.ports.passwords.send(passwords);
+            app.ports.loginSuccess.send({
+              passwords: passwords
+            });
           })
           .catch(function (error) {
-            app.ports.error.send(getErrorMessage(error));
+            app.ports.notification.send({
+              level: "error",
+              message: getErrorMessage(error),
+            });
           });
       });
 
@@ -58,7 +63,10 @@
             });
           })
           .catch(function (error) {
-            app.ports.error.send(getErrorMessage(error));
+            app.ports.notification.send({
+              level: "error",
+              message: getErrorMessage(error),
+            });
           });
       });
 

@@ -64,7 +64,7 @@ port encryptLibraryData : EncryptLibraryDataContent -> Cmd msg
 port copyPasswordToClipboard : ElementId -> Cmd msg
 
 
-port error : (Value -> msg) -> Sub msg
+port notification : (Value -> msg) -> Sub msg
 
 
 port loginSuccess : (Value -> msg) -> Sub msg
