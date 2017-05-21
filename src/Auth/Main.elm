@@ -7,8 +7,9 @@ type alias Model =
     , filter : String
     , idleTime : Int
     , uid : Int
-    , masterKey : MasterKey
-    , newMasterKeyForm : NewMasterKey.Model.Model
+    , masterKey :
+        MasterKey
+        -- , newMasterKeyForm : NewMasterKey.Model.Model
     }
 
 
@@ -36,6 +37,41 @@ type Modal
     | DeletePasswordConfirmation Int
 
 
+type alias ElementId =
+    String
+
+
+type alias PasswordId =
+    Int
+
+
+type alias MasterKey =
+    String
+
+
+type alias Library =
+    { blob : String
+    , libraryVersion : Int
+    , apiVersion : Int
+    , modified : Int
+    }
+
+
+type alias EncryptLibraryDataContent =
+    { oldMasterKey : Maybe MasterKey
+    , oldLibraryData : Maybe LibraryData
+    , newMasterKey : Maybe MasterKey
+    , passwords : List Password
+    }
+
+
+type alias UploadLibraryContent =
+    { oldHash : String
+    , newHash : String
+    , libraryData : LibraryData
+    }
+
+
 type Msg
     = NoOp
     | UploadLibrary UploadLibraryContent
@@ -57,6 +93,25 @@ type Msg
     | CopyPasswordToClipboard ElementId
     | MsgForNewMasterKey NewMasterKey.Msg.Msg
     | UpdateFilter String
+
+
+init : Flags -> ( Model, Cmd Msg )
+init flags =
+    let
+        model =
+            { passwords =
+                []
+                -- Should be gained from the init
+            , modal = Nothing
+            , filter = ""
+            , idleTime = 0
+            , uid = 0
+            , masterKey =
+                ""
+                -- Should be gained from the init
+            }
+    in
+        model ! []
 
 
 subscriptions : Sub Msg

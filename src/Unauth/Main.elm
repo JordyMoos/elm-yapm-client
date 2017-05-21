@@ -6,6 +6,10 @@ import Dom
 import Http
 import Json.Decode as Decode
 import Ports
+import Html exposing (..)
+import Html.Attributes exposing (..)
+import Html.Events exposing (..)
+import Maybe.Extra exposing (isNothing)
 
 
 type alias Model =
@@ -33,6 +37,12 @@ type alias LibraryData =
     }
 
 
+type alias ParseLibraryDataContent =
+    { masterKey : Maybe MasterKey
+    , libraryData : Maybe LibraryData
+    }
+
+
 type alias MasterKey =
     String
 
@@ -51,9 +61,7 @@ init flags =
 subscriptions : Sub Msg
 subscriptions =
     Sub.batch
-        [ Ports.error SetError
-        , passwords SetPasswords
-        ]
+        [ Ports.error SetError ]
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -175,7 +183,7 @@ decodeLibraryData =
 decryptLibraryIfPossibleCmd : Model -> Cmd Msg
 decryptLibraryIfPossibleCmd model =
     if areDecryptRequirementsMet model then
-        parseLibraryData (ParseLibraryDataContent model.masterKey model.libraryData)
+        Ports.parseLibraryData (ParseLibraryDataContent model.masterKey model.libraryData)
     else
         Cmd.none
 
