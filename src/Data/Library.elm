@@ -1,4 +1,4 @@
-module Data.Library exposing (Library, decoder, encode, decodeLibraryFromJson)
+module Data.Library exposing (..)
 
 import Json.Decode as Decode exposing (Decoder)
 import Json.Decode.Pipeline as Pipeline exposing (decode, required)
@@ -27,8 +27,8 @@ encode library =
         ]
 
 
-decodeLibraryFromJson : Value -> Maybe Library
-decodeLibraryFromJson json =
+decodeFromJson : Value -> Maybe Library
+decodeFromJson json =
     json
         |> Decode.decodeValue Decode.string
         |> Result.toMaybe

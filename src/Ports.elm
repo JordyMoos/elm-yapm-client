@@ -2,15 +2,17 @@ port module Ports exposing (..)
 
 import Json.Encode exposing (Value)
 import Data.Library as Library
+import Data.LoginRequest as LoginRequest
+import Data.EncryptLibraryRequest as EncryptLibraryRequest
 
 
-port parseLibraryData : ParseLibraryDataContent -> Cmd msg
+port login : LoginRequest -> Cmd msg
 
 
-port encryptLibraryData : EncryptLibraryDataContent -> Cmd msg
+port encryptLibrary : EncryptLibraryRequest -> Cmd msg
 
 
-port copyPasswordToClipboard : ElementId -> Cmd msg
+port copyPasswordToClipboard : Int -> Cmd msg
 
 
 port notification : (Value -> msg) -> Sub msg
@@ -19,4 +21,4 @@ port notification : (Value -> msg) -> Sub msg
 port loginSuccess : (Value -> msg) -> Sub msg
 
 
-port uploadLibrary : (Value -> msg) -> Sub msg
+port encryptLibrarySuccess : (Value -> msg) -> Sub msg
