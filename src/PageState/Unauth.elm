@@ -11,13 +11,15 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Maybe.Extra exposing (isNothing)
 import Data.Notification as Notification
+import Data.Library as Library
+import Data.LoginRequest as LoginRequest
 
 
 type alias Model =
     { flags : Flags
     , notification : Maybe Notification.Notification
     , isDownloading : Bool
-    , libraryData : Maybe LibraryData
+    , library : Maybe Library.Library
     , masterKeyInput : String
     , masterKey : Maybe String
     }
@@ -26,7 +28,7 @@ type alias Model =
 type Msg
     = NoOp
     | DownloadLibrary
-    | NewLibrary (Result Http.Error LibraryData)
+    | NewLibrary (Result Http.Error Library.Library)
     | SetMasterKeyInput String
     | SubmitAuthForm
     | SetNotification Decode.Value
@@ -38,7 +40,7 @@ init flags =
     { flags = flags
     , notification = Nothing
     , isDownloading = False
-    , libraryData = Nothing
+    , library = Nothing
     , masterKeyInput = ""
     , masterKey = Nothing
     }
@@ -60,10 +62,10 @@ update msg model =
         DownloadLibrary ->
             model ! [ downloadLibraryCmd model.flags.apiEndPoint ]
 
-        NewLibrary (Ok newLibraryData) ->
+        NewLibrary (Ok newLibrary) ->
             let
                 newModel =
-                    { model | libraryData = Just newLibraryData }
+                    { model | library = Just newLibrary }
             in
                 newModel ! [ decryptLibraryIfPossibleCmd newModel ]
 
@@ -93,7 +95,7 @@ update msg model =
         SetNotification json ->
             let
                 notification =
-                    Notification.decodeNotificationFromJson json
+                    Notification.decodeFromJson json
             in
                 { model | notification = notification } ! []
 
@@ -168,30 +170,16 @@ downloadLibraryCmd apiEndPoint =
 
 
 decodeLibraryData =
-    Decode.map2 LibraryData
+    Decode.map2 Library.Library
         (Decode.field "library" Decode.string)
         (Decode.field "hmac" Decode.string)
 
 
-
---
--- Refactor / Check scripts below
---
-
-
 decryptLibraryIfPossibleCmd : Model -> Cmd Msg
 decryptLibraryIfPossibleCmd model =
-    if areDecryptRequirementsMet model then
-        Ports.parseLibraryData (ParseLibraryDataContent model.masterKey model.libraryData)
-    else
-        Cmd.none
+    case ( model.masterKey, model.library ) of
+        ( Just masterKey, Just library ) ->
+            Ports.login (LoginRequest.LoginRequest masterKey library)
 
-
-areDecryptRequirementsMet : Model -> Bool
-areDecryptRequirementsMet model =
-    let
-        unMetRequirements =
-            [ isNothing model.masterKey, isNothing model.libraryData ]
-                |> List.filter (\value -> value)
-    in
-        List.length unMetRequirements == 0
+        ( _, _ ) ->
+            Cmd.none

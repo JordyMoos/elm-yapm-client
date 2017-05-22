@@ -3,6 +3,7 @@ module Data.EncryptLibraryResponse exposing (..)
 import Data.Library as Library
 import Json.Decode as Decode exposing (Decoder)
 import Json.Decode.Pipeline as Pipeline exposing (decode, required)
+import Json.Encode as Encode exposing (Value)
 import Util exposing ((=>))
 
 

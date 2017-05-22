@@ -16,6 +16,11 @@ type alias Password =
     }
 
 
+type alias Passwords =
+    { passwords : List Password
+    }
+
+
 passwordDecoder : Decoder Password
 passwordDecoder =
     decode Password
@@ -26,9 +31,9 @@ passwordDecoder =
         |> required "username" Decode.string
 
 
-passwordsDecoder : Decoder (List Password)
+passwordsDecoder : Decoder Passwords
 passwordsDecoder =
-    decode (Decode.list Password)
+    decode Passwords
         |> required "passwords" (Decode.list passwordDecoder)
 
 
@@ -43,7 +48,22 @@ encode password =
         ]
 
 
-decodePasswordsFromJson : Value -> Maybe (List Password)
+encodePasswords : List Password -> Value
+encodePasswords passwords =
+    let
+        mapper password =
+            Encode.object
+                [ "comment" => Encode.string password.comment
+                , "password" => Encode.string password.password
+                , "title" => Encode.string password.title
+                , "url" => Encode.string password.url
+                , "username" => Encode.string password.username
+                ]
+    in
+        List.map mapper passwords |> Encode.list
+
+
+decodePasswordsFromJson : Value -> Maybe Passwords
 decodePasswordsFromJson json =
     json
         |> Decode.decodeValue Decode.string
