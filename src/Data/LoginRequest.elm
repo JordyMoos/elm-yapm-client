@@ -1,7 +1,19 @@
 module Data.LoginRequest exposing (..)
 
+import Data.Library as Library
+import Json.Encode as Encode exposing (Value)
+import Util exposing ((=>))
+
 
 type alias LoginRequest =
-    { masterKey : Maybe MasterKey
-    , libraryData : Maybe Library.Library
+    { masterKey : String
+    , library : Library.Library
     }
+
+
+encode : LoginRequest -> Value
+encode request =
+    Encode.object
+        [ "masterKey" => Encode.string request.level
+        , "library" => Library.encode request.library
+        ]

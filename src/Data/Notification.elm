@@ -1,4 +1,4 @@
-module Data.Notification exposing (Notification, initError, decoder, encode, decodeNotificationFromJson)
+module Data.Notification exposing (..)
 
 import Json.Decode as Decode exposing (Decoder)
 import Json.Decode.Pipeline as Pipeline exposing (decode, required)
@@ -34,8 +34,8 @@ encode notification =
         ]
 
 
-decodeNotificationFromJson : Value -> Maybe Notification
-decodeNotificationFromJson json =
+decodeFromJson : Value -> Maybe Notification
+decodeFromJson json =
     json
         |> Decode.decodeValue Decode.string
         |> Result.toMaybe
