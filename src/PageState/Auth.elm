@@ -18,21 +18,6 @@ type alias Model =
     }
 
 
-type alias Password =
-    { comment : String
-    , password : String
-    , title : String
-    , url : String
-    , username : String
-    }
-
-
-type alias LibraryData =
-    { library : String
-    , hmac : String
-    }
-
-
 type alias WrappedPassword =
     { password : Password
     , id : Int
