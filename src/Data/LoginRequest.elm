@@ -14,6 +14,6 @@ type alias LoginRequest =
 encode : LoginRequest -> Value
 encode request =
     Encode.object
-        [ "masterKey" => Encode.string request.level
+        [ "masterKey" => Encode.string request.masterKey
         , "library" => Library.encode request.library
         ]

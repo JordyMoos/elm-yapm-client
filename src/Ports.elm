@@ -6,10 +6,10 @@ import Data.LoginRequest as LoginRequest
 import Data.EncryptLibraryRequest as EncryptLibraryRequest
 
 
-port login : LoginRequest -> Cmd msg
+port login : LoginRequest.LoginRequest -> Cmd msg
 
 
-port encryptLibrary : EncryptLibraryRequest -> Cmd msg
+port encryptLibrary : EncryptLibraryRequest.EncryptLibraryRequest -> Cmd msg
 
 
 port copyPasswordToClipboard : Int -> Cmd msg

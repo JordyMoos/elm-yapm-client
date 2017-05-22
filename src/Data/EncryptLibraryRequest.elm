@@ -19,6 +19,6 @@ encode request =
     Encode.object
         [ "oldMasterKey" => Encode.string request.oldMasterKey
         , "oldLibrary" => Library.encode request.oldLibrary
-        , "newMasterKey" => Encode.string request.Encode.string
-        , "passwords" => Password.encode request.passwords
+        , "newMasterKey" => Encode.string request.newMasterKey
+        , "passwords" => Password.encodePasswords request.passwords
         ]
