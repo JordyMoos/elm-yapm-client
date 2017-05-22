@@ -1,4 +1,4 @@
-module Auth exposing (..)
+module PageState.Auth exposing (..)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)

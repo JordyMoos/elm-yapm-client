@@ -1,35 +1,7 @@
 port module Ports exposing (..)
 
 import Json.Encode exposing (Value)
-
-
-type alias MasterKey =
-    String
-
-
-type alias ElementId =
-    String
-
-
-type alias EncryptLibraryDataContent =
-    { oldMasterKey : Maybe MasterKey
-    , oldLibraryData : Maybe LibraryData
-    , newMasterKey : Maybe MasterKey
-    , passwords : List Password
-    }
-
-
-type alias UploadLibraryContent =
-    { oldHash : String
-    , newHash : String
-    , libraryData : LibraryData
-    }
-
-
-type alias ParseLibraryDataContent =
-    { masterKey : Maybe MasterKey
-    , libraryData : Maybe LibraryData
-    }
+import Data.Library as Library
 
 
 port parseLibraryData : ParseLibraryDataContent -> Cmd msg

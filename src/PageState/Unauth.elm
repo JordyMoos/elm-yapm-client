@@ -1,4 +1,4 @@
-module Unauth exposing (Model, Msg, init, subscriptions, update, view)
+module PageState.Unauth exposing (Model, Msg, init, subscriptions, update, view)
 
 import Flags exposing (Flags)
 import Task
@@ -19,7 +19,7 @@ type alias Model =
     , isDownloading : Bool
     , libraryData : Maybe LibraryData
     , masterKeyInput : String
-    , masterKey : Maybe MasterKey
+    , masterKey : Maybe String
     }
 
 
@@ -31,22 +31,6 @@ type Msg
     | SubmitAuthForm
     | SetNotification Decode.Value
     | ClearNotification
-
-
-type alias LibraryData =
-    { library : String
-    , hmac : String
-    }
-
-
-type alias ParseLibraryDataContent =
-    { masterKey : Maybe MasterKey
-    , libraryData : Maybe LibraryData
-    }
-
-
-type alias MasterKey =
-    String
 
 
 init : Flags -> ( Model, Cmd Msg )

@@ -1,9 +1,10 @@
-module Data.Password exposing (Password, decoder, encode, decodePasswordFromJson)
+module Data.Password exposing (..)
 
 import Json.Decode as Decode exposing (Decoder)
 import Json.Decode.Pipeline as Pipeline exposing (decode, required)
 import Json.Encode as Encode exposing (Value)
 import Util exposing ((=>))
+import List
 
 
 type alias Password =
@@ -27,7 +28,7 @@ passwordDecoder =
 
 passwordsDecoder : Decoder (List Password)
 passwordsDecoder =
-    decode (List Password)
+    decode (Decode.list Password)
         |> required "passwords" (Decode.list passwordDecoder)
 
 
@@ -42,9 +43,9 @@ encode password =
         ]
 
 
-decodePasswordsFromJson : Value -> Maybe Password
+decodePasswordsFromJson : Value -> Maybe (List Password)
 decodePasswordsFromJson json =
     json
         |> Decode.decodeValue Decode.string
         |> Result.toMaybe
-        |> Maybe.andThen (Decode.decodeString decoder >> Result.toMaybe)
+        |> Maybe.andThen (Decode.decodeString passwordsDecoder >> Result.toMaybe)
