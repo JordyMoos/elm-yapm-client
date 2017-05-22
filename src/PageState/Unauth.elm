@@ -4,7 +4,7 @@ import Flags exposing (Flags)
 import Task
 import Dom
 import Http
-import Json.Decode as Decode
+import Json.Decode as Decode exposing (Value)
 import Ports
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -31,7 +31,7 @@ type Msg
     | NewLibrary (Result Http.Error Library.Library)
     | SetMasterKeyInput String
     | SubmitAuthForm
-    | SetNotification Decode.Value
+    | SetNotification Value
     | ClearNotification
 
 
@@ -166,13 +166,7 @@ focusMasterKeyInputCmd =
 
 downloadLibraryCmd : String -> Cmd Msg
 downloadLibraryCmd apiEndPoint =
-    Http.send NewLibrary (Http.get apiEndPoint decodeLibraryData)
-
-
-decodeLibraryData =
-    Decode.map2 Library.Library
-        (Decode.field "library" Decode.string)
-        (Decode.field "hmac" Decode.string)
+    Http.send NewLibrary (Http.get apiEndPoint Library.decoder)
 
 
 decryptLibraryIfPossibleCmd : Model -> Cmd Msg
