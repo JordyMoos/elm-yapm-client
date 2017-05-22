@@ -4,8 +4,8 @@ import Basics exposing (..)
 import Html
 import Time
 import Mouse
-import Auth
-import Unauth
+import PageState.Auth as Auth
+import PageState.Unauth as Unauth
 
 
 type PageState

@@ -27,7 +27,7 @@ encode library =
         ]
 
 
-decodeLibraryFromJson : Value -> Maybe Notification
+decodeLibraryFromJson : Value -> Maybe Library
 decodeLibraryFromJson json =
     json
         |> Decode.decodeValue Decode.string
