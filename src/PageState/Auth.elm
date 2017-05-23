@@ -4,6 +4,9 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Flags exposing (Flags)
+import Data.Password as Password
+import Data.Library as Library
+import Data.UploadLibraryRequest as UploadLibraryRequest
 
 
 type alias Model =
@@ -13,13 +16,13 @@ type alias Model =
     , idleTime : Int
     , uid : Int
     , masterKey :
-        MasterKey
+        String
         -- , newMasterKeyForm : NewMasterKey.Model.Model
     }
 
 
 type alias WrappedPassword =
-    { password : Password
+    { password : Password.Password
     , id : Int
     , isVisible : Bool
     }
@@ -41,37 +44,10 @@ type alias PasswordId =
     Int
 
 
-type alias MasterKey =
-    String
-
-
-type alias Library =
-    { blob : String
-    , libraryVersion : Int
-    , apiVersion : Int
-    , modified : Int
-    }
-
-
-type alias EncryptLibraryDataContent =
-    { oldMasterKey : Maybe MasterKey
-    , oldLibraryData : Maybe LibraryData
-    , newMasterKey : Maybe MasterKey
-    , passwords : List Password
-    }
-
-
-type alias UploadLibraryContent =
-    { oldHash : String
-    , newHash : String
-    , libraryData : LibraryData
-    }
-
-
 type Msg
     = NoOp
-    | UploadLibrary UploadLibraryContent
-    | UploadLibraryResponse (Maybe LibraryData) (Maybe MasterKey) (Result Http.Error String)
+    | UploadLibrary UploadLibraryRequest.UploadLibraryRequest
+    | UploadLibraryResponse (Maybe Library) (Maybe String) (Result Http.Error String)
     | SetMasterKeyInput String
     | SubmitAuthForm
     | SetError String
