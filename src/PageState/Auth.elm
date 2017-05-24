@@ -7,17 +7,21 @@ import Flags exposing (Flags)
 import Data.Password as Password
 import Data.Library as Library
 import Data.UploadLibraryRequest as UploadLibraryRequest
+import Data.Notification as Notification
+import Time
+import Mouse
+import Http
+import Json.Decode as Decode exposing (Value)
 
 
 type alias Model =
-    { passwords : List WrappedPassword
-    , modal : Maybe Modal
+    { notification : Maybe Notification.Notification
+    , flags : Flags
+    , passwords : List WrappedPassword
     , filter : String
     , idleTime : Int
     , uid : Int
-    , masterKey :
-        String
-        -- , newMasterKeyForm : NewMasterKey.Model.Model
+    , masterKey : String
     }
 
 
@@ -26,14 +30,6 @@ type alias WrappedPassword =
     , id : Int
     , isVisible : Bool
     }
-
-
-type Modal
-    = EditPassword
-    | NewPassword
-    | NewMasterKey
-    | NewMasterKeyConfirmation
-    | DeletePasswordConfirmation Int
 
 
 type alias ElementId =
@@ -46,41 +42,41 @@ type alias PasswordId =
 
 type Msg
     = NoOp
+    | SetNotification Value
+    | ClearNotification
     | UploadLibrary UploadLibraryRequest.UploadLibraryRequest
     | UploadLibraryResponse (Maybe Library) (Maybe String) (Result Http.Error String)
-    | SetMasterKeyInput String
-    | SubmitAuthForm
-    | SetError String
-    | ClearError
-    | Logout
-    | ShowNewPasswordModal
-    | ShowNewMasterKeyModal
-    | CloseModal
     | IncrementIdleTime Time.Time
     | ResetIdleTime Mouse.Position
     | EncryptLibrary
     | TogglePasswordVisibility Int
-    | AskDeletePassword Int
-    | ConfirmDeletePassword PasswordId
     | CopyPasswordToClipboard ElementId
-    | MsgForNewMasterKey NewMasterKey.Msg.Msg
     | UpdateFilter String
 
 
 init : Flags -> ( Model, Cmd Msg )
-init flags =
+init flags passwords masterKey =
     let
+        lastId =
+            List.length passwords - 1
+
+        ids =
+            List.range 0 lastId
+
+        wrappedPasswords =
+            List.map2
+                (\password -> \id -> WrappedPassword password id False)
+                passwords
+                ids
+
         model =
-            { passwords =
-                []
-                -- Should be gained from the init
-            , modal = Nothing
+            { notification = Nothing
+            , flags = flags
+            , passwords = wrappedPasswords
             , filter = ""
             , idleTime = 0
-            , uid = 0
-            , masterKey =
-                ""
-                -- Should be gained from the init
+            , uid = lastId
+            , masterKey = masterKey
             }
     in
         model ! []
@@ -89,9 +85,7 @@ init flags =
 subscriptions : Sub Msg
 subscriptions =
     Sub.batch
-        [ error SetError
-        , passwords SetPasswords
-        , uploadLibrary UploadLibrary
+        [ uploadLibrary UploadLibrary
         , Time.every Time.second IncrementIdleTime
         , Mouse.clicks ResetIdleTime
         , Mouse.moves ResetIdleTime
@@ -104,9 +98,25 @@ view model =
     section [ id "authorized" ]
         [ viewNavBar model
         , viewPasswordTable model
-        , viewModal model
-        , viewError model.error
+        , viewNotification model.notification
         ]
+
+
+viewNotification : Maybe Notification.Notification -> Html Msg
+viewNotification notification =
+    case notification of
+        Just notificationData ->
+            div []
+                [ text <|
+                    notificationData.level
+                        ++ ": "
+                        ++ notificationData.message
+                        ++ " "
+                , button [ onClick ClearNotification ] [ text "[x]" ]
+                ]
+
+        Nothing ->
+            div [] [ text "[No Notification]" ]
 
 
 viewNavBar : Model -> Html Msg
@@ -131,14 +141,6 @@ viewNavBar model =
                 , button [ class "save btn", onClick EncryptLibrary ]
                     [ i [ class "icon-floppy" ] []
                     , text " Save"
-                    ]
-                , button [ class "newPassword btn", onClick ShowNewPasswordModal ]
-                    [ i [ class "icon-plus" ] []
-                    , text " New Password"
-                    ]
-                , button [ class "newMasterKey btn", onClick ShowNewMasterKeyModal ]
-                    [ i [ class "icon-wrench" ] []
-                    , text " Change Master Key"
                     ]
                 , button [ class "logout btn", onClick Logout ]
                     [ i [ class "icon-lock-open" ] []
@@ -191,8 +193,6 @@ viewPassword { password, id, isVisible } =
                 [ i [ class "icon-eye" ] [] ]
             , a [ class "editPassword" ]
                 [ i [ class "icon-edit" ] [] ]
-            , a [ class "deletePassword", onClick (AskDeletePassword id) ]
-                [ i [ class "icon-trash" ] [] ]
             ]
         ]
 
@@ -212,162 +212,6 @@ getPasswordVisibility isVisible =
         ""
     else
         "obscured"
-
-
-viewModal : Model -> Html Msg
-viewModal model =
-    case model.modal of
-        Just EditPassword ->
-            text "Show exit password"
-
-        Just NewPassword ->
-            viewNewPasswordModal model
-
-        Just NewMasterKey ->
-            NewMasterKey.View.viewModal model
-
-        Just NewMasterKeyConfirmation ->
-            NewMasterKey.View.viewConfirmationModal model
-
-        Just (DeletePasswordConfirmation id) ->
-            List.filter (\password -> password.id == id) model.passwords
-                |> List.head
-                |> viewDeletePasswordConfirmation
-
-        Nothing ->
-            text ""
-
-
-onSelfClickWithId : String -> List (Attribute Msg)
-onSelfClickWithId elementId =
-    [ id elementId
-    , on "click" <|
-        Decode.map
-            (\msg ->
-                if msg == elementId then
-                    CloseModal
-                else
-                    NoOp
-            )
-            (Decode.at [ "target", "id" ] Decode.string)
-    ]
-
-
-viewModalContainer : List (Html Msg) -> Html Msg
-viewModalContainer html =
-    div
-        (onSelfClickWithId "modal" ++ [ class "modal visible-modal" ])
-        [ div [ class "modal-dialog" ]
-            [ div [ class "modal-content" ]
-                html
-            ]
-        ]
-
-
-viewModalHeader : String -> Html Msg
-viewModalHeader title =
-    div [ class "modal-header" ]
-        [ button
-            [ class "close"
-            , onClick CloseModal
-            , attribute "aria-hidden" "true"
-            ]
-            [ text "x" ]
-        , h4 [ class "modal-title", id "modalHeader" ]
-            [ text title ]
-        ]
-
-
-viewDeletePasswordConfirmation : Maybe WrappedPassword -> Html Msg
-viewDeletePasswordConfirmation password =
-    case password of
-        Just password ->
-            viewModalContainer
-                [ viewModalHeader "Delete Password"
-                , viewDeletePasswordContent password
-                , div [ class "modal-footer" ]
-                    [ a [ class "btn btn-default", onClick CloseModal ]
-                        [ text "No Cancel" ]
-                    , a [ class "btn btn-danger", onClick (ConfirmDeletePassword password.id) ]
-                        [ text "Yes Delete" ]
-                    ]
-                ]
-
-        Nothing ->
-            text ""
-
-
-viewDeletePasswordContent : WrappedPassword -> Html Msg
-viewDeletePasswordContent password =
-    div [ class "modal-body" ]
-        [ p []
-            [ text "Are you sure you want to delete this password?" ]
-        ]
-
-
-viewNewPasswordModal : Model -> Html Msg
-viewNewPasswordModal model =
-    viewModalContainer
-        [ viewModalHeader "New Password"
-        , viewNewPasswordForm model
-        , div [ class "modal-footer" ]
-            [ a [ class "btn btn-default" ]
-                [ i [ class "icon-shuffle" ] []
-                , text "Random Password"
-                ]
-            , a [ class "btn btn-primary" ]
-                [ i [ class "icon-floppy" ] []
-                , text "Save"
-                ]
-            ]
-        ]
-
-
-viewNewPasswordForm : Model -> Html Msg
-viewNewPasswordForm model =
-    Html.form [ class "modal-body form-horizontal" ]
-        --
-        -- Off for now because it is just visual an no longer compatible with the viewFormInput function
-        --
-        -- [ viewFormInput "title" "Title" "text"
-        -- , viewFormInput "URL" "URL" "text"
-        -- , viewFormInput "username" "Username" "text"
-        -- , viewFormInput "pass" "Password" "password"
-        -- , viewFormInput "passRepeat" "Password Repeat" "password"
-        -- , viewFormTextarea "comment" "Comment"
-        -- ]
-        []
-
-
-viewFormInput : String -> String -> String -> String -> (String -> Msg) -> Html Msg
-viewFormInput inputId title inputType inputValue onInputAction =
-    div
-        [ class "form-group" ]
-        [ label
-            [ class "col-sm-4 control-label", for inputId ]
-            [ text title ]
-        , div
-            [ class "col-sm-8" ]
-            [ input
-                [ attribute "type" inputType
-                , value inputValue
-                , onInput onInputAction
-                , class "form-control"
-                , id inputId
-                ]
-                []
-            ]
-        ]
-
-
-viewFormTextarea : String -> String -> Html Msg
-viewFormTextarea inputId title =
-    div [ class "form-group" ]
-        [ label [ class "col-sm-4 control-label", for inputId ]
-            [ text title ]
-        , div [ class "col-sm-8" ]
-            [ textarea [ class "form-control", id inputId ] [] ]
-        ]
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -409,45 +253,9 @@ update msg model =
                 }
                     ! []
 
-        SetPasswords passwords ->
-            let
-                firstId =
-                    model.uid
-
-                lastId =
-                    model.uid + List.length passwords - 1
-
-                ids =
-                    List.range firstId lastId
-
-                wrappedPasswords =
-                    List.map2
-                        (\password -> \id -> WrappedPassword password id False)
-                        passwords
-                        ids
-            in
-                { model
-                    | passwords = wrappedPasswords
-                    , uid = lastId + 1
-                    , isAuthenticated = True
-                }
-                    ! []
-
-        Logout ->
-            logout model ! [ focusMasterKeyInputCmd ]
-
-        ShowNewPasswordModal ->
-            { model | modal = Just NewPassword } ! []
-
-        ShowNewMasterKeyModal ->
-            { model | modal = Just NewMasterKey } ! []
-
-        CloseModal ->
-            { model | modal = Nothing } ! []
-
         IncrementIdleTime _ ->
             if model.idleTime + 1 > model.config.maxIdleTime then
-                logout model ! [ focusMasterKeyInputCmd ]
+                logout model ! []
             else
                 { model | idleTime = model.idleTime + 1 } ! []
 
@@ -467,33 +275,11 @@ update msg model =
             in
                 { model | passwords = List.map updatePassword model.passwords } ! []
 
-        AskDeletePassword id ->
-            { model | modal = Just (DeletePasswordConfirmation id) } ! []
-
-        ConfirmDeletePassword id ->
-            let
-                newModel =
-                    { model
-                        | passwords = List.filter (\password -> password.id /= id) model.passwords
-                        , modal = Nothing
-                    }
-            in
-                newModel ! [ createEncryptLibraryCmd newModel Nothing ]
-
         CopyPasswordToClipboard elementId ->
             model ! [ copyPasswordToClipboard elementId ]
 
-        MsgForNewMasterKey subMsg ->
-            NewMasterKey.Update.update subMsg model
-
         UpdateFilter newFilter ->
             { model | filter = newFilter, idleTime = 0 } ! []
-
-
-
---
--- Refactor / Check scripts below
---
 
 
 logout : Model -> Model
@@ -537,15 +323,6 @@ uploadLibraryBody { oldHash, newHash, libraryData } =
             "pwhash=" ++ oldHash ++ "&newlib=" ++ encodedLibrary ++ (addNewHashIfChanged oldHash newHash)
     in
         Http.stringBody "application/x-www-form-urlencoded" params
-
-
-encodeLibraryData : LibraryData -> String
-encodeLibraryData libraryData =
-    Encode.object
-        [ ( "hmac", Encode.string libraryData.hmac )
-        , ( "library", Encode.string libraryData.library )
-        ]
-        |> Encode.encode 0
 
 
 unwrapPasswords : List WrappedPassword -> List Password
