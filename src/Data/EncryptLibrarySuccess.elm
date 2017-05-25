@@ -1,4 +1,4 @@
-module Data.EncryptLibraryResponse exposing (..)
+module Data.EncryptLibrarySuccess exposing (..)
 
 import Data.Library as Library
 import Json.Decode as Decode exposing (Decoder)
@@ -7,22 +7,22 @@ import Json.Encode as Encode exposing (Value)
 import Util exposing ((=>))
 
 
-type alias EncryptLibraryResponse =
+type alias EncryptLibrarySuccess =
     { oldHash : String
     , newHash : String
     , library : Library.Library
     }
 
 
-decoder : Decoder EncryptLibraryResponse
+decoder : Decoder EncryptLibrarySuccess
 decoder =
-    decode EncryptLibraryResponse
+    decode EncryptLibrarySuccess
         |> required "oldHash" Decode.string
         |> required "newHash" Decode.string
         |> required "library" Library.decoder
 
 
-decodeFromJson : Value -> Maybe EncryptLibraryResponse
+decodeFromJson : Value -> Maybe EncryptLibrarySuccess
 decodeFromJson json =
     json
         |> Decode.decodeValue Decode.string
