@@ -38,10 +38,10 @@
       }
 
       var app = Elm.Main.fullscreen(window.yapm.config);
-      app.ports.parseLibraryData.subscribe(function (request) {
-        window.yapm.decryptLibrary(request)
-          let { masterKey, library } = request;
-          .then(function (masterKey, library) {
+      app.ports.login.subscribe(function (request) {
+        let { masterKey, library } = request;
+        window.yapm.decryptLibrary(masterKey, library)
+          .then(function (passwords) {
             app.ports.loginSuccess.send({
               library: library,
               masterKey: masterKey,
@@ -56,7 +56,7 @@
           });
       });
 
-      app.ports.encryptLibraryData.subscribe(function (request) {
+      app.ports.encryptLibrary.subscribe(function (request) {
         window.yapm.encryptLibrary(request)
           .then(function (data) {
             app.ports.uploadLibrary.send({

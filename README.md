@@ -13,10 +13,12 @@ Run in with php
 Install elm modules
 `elm-package install`
 
+Install grunt stuff
+`npm install`
 
-Run in one terminal:
-`./run-dev.sh`
+Compile elm and assets with grunt
+`grunt`
 
-
-
-Now goto localhost:8000
+Then goto the index.html's file in your browser.
+For example
+`file:///home/jordy/workspace/elm-yapm-client/index.html`
