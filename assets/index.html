@@ -58,7 +58,7 @@
           .then(function (data) {
             app.ports.uploadLibrary.send({
               oldHash: data[0],
-              libraryData: data[1],
+              library: data[1],
               newHash: data[2]
             });
           })

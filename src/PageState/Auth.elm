@@ -3,33 +3,40 @@ module PageState.Auth exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import Time
+import Mouse
+import Http
+import Json.Decode as Decode exposing (Value)
 import Flags exposing (Flags)
 import Data.Password as Password
 import Data.Library as Library
 import Data.UploadLibraryRequest as UploadLibraryRequest
 import Data.Notification as Notification
-import Time
-import Mouse
-import Http
-import Json.Decode as Decode exposing (Value)
+import Data.EncryptLibraryRequest as EncryptLibraryRequest
+import Ports
 
 
 type alias Model =
-    { notification : Maybe Notification.Notification
-    , flags : Flags
+    { flags : Flags
+    , masterKey : MasterKey
+    , library : Library.Library
     , passwords : List WrappedPassword
+    , uid : Int
     , filter : String
     , idleTime : Int
-    , uid : Int
-    , masterKey : String
+    , notification : Maybe Notification.Notification
     }
 
 
 type alias WrappedPassword =
     { password : Password.Password
-    , id : Int
+    , id : PasswordId
     , isVisible : Bool
     }
+
+
+type alias MasterKey =
+    String
 
 
 type alias ElementId =
@@ -45,7 +52,7 @@ type Msg
     | SetNotification Value
     | ClearNotification
     | UploadLibrary UploadLibraryRequest.UploadLibraryRequest
-    | UploadLibraryResponse (Maybe Library) (Maybe String) (Result Http.Error String)
+    | UploadLibraryResponse Library.Library MasterKey (Result Http.Error String)
     | IncrementIdleTime Time.Time
     | ResetIdleTime Mouse.Position
     | EncryptLibrary
@@ -54,8 +61,8 @@ type Msg
     | UpdateFilter String
 
 
-init : Flags -> ( Model, Cmd Msg )
-init flags passwords masterKey =
+init : Flags -> List Password.Password -> MasterKey -> Library.Library -> ( Model, Cmd Msg )
+init flags passwords masterKey library =
     let
         lastId =
             List.length passwords - 1
@@ -70,13 +77,14 @@ init flags passwords masterKey =
                 ids
 
         model =
-            { notification = Nothing
-            , flags = flags
+            { flags = flags
+            , masterKey = masterKey
+            , library = library
             , passwords = wrappedPasswords
+            , uid = lastId
             , filter = ""
             , idleTime = 0
-            , uid = lastId
-            , masterKey = masterKey
+            , notification = Nothing
             }
     in
         model ! []
@@ -85,12 +93,81 @@ init flags passwords masterKey =
 subscriptions : Sub Msg
 subscriptions =
     Sub.batch
-        [ uploadLibrary UploadLibrary
+        [ Ports.encryptLibrarySuccess UploadLibrary
         , Time.every Time.second IncrementIdleTime
         , Mouse.clicks ResetIdleTime
         , Mouse.moves ResetIdleTime
         , Mouse.downs ResetIdleTime
         ]
+
+
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
+    case msg of
+        NoOp ->
+            model ! []
+
+        UploadLibrary uploadLibraryRequest ->
+            let
+                _ =
+                    Debug.log "Hash Old" uploadLibraryRequest.oldHash
+
+                _ =
+                    Debug.log "Hash New" uploadLibraryRequest.newHash
+
+                _ =
+                    Debug.log "Library" uploadLibraryRequest.library.library
+            in
+                { model | library = Just uploadLibraryRequest.library }
+                    ! [ uploadLibraryCmd model.flags.apiEndPoint uploadLibraryRequest model.librar model.masterKey ]
+
+        UploadLibraryResponse _ _ (Ok message) ->
+            let
+                _ =
+                    Debug.log "Upload success" message
+            in
+                model ! []
+
+        UploadLibraryResponse previousLibrary previousMasterKey (Err errorValue) ->
+            let
+                _ =
+                    Debug.log "Response error" (toString errorValue)
+            in
+                { model
+                    | notification = Notification.initError "Upload error"
+                    , library = previousLibrary
+                    , masterKey = previousMasterKey
+                }
+                    ! []
+
+        IncrementIdleTime _ ->
+            if model.idleTime + 1 > model.config.maxIdleTime then
+                model ! []
+                -- request logout here
+            else
+                { model | idleTime = model.idleTime + 1 } ! []
+
+        ResetIdleTime _ ->
+            { model | idleTime = 0 } ! []
+
+        EncryptLibrary ->
+            model ! [ createEncryptLibraryCmd model Nothing ]
+
+        TogglePasswordVisibility id ->
+            let
+                updatePassword password =
+                    if password.id == id then
+                        { password | isVisible = not password.isVisible }
+                    else
+                        password
+            in
+                { model | passwords = List.map updatePassword model.passwords } ! []
+
+        CopyPasswordToClipboard elementId ->
+            model ! [ Ports.copyPasswordToClipboard elementId ]
+
+        UpdateFilter newFilter ->
+            { model | filter = newFilter, idleTime = 0 } ! []
 
 
 view : Model -> Html Msg
@@ -142,7 +219,8 @@ viewNavBar model =
                     [ i [ class "icon-floppy" ] []
                     , text " Save"
                     ]
-                , button [ class "logout btn", onClick Logout ]
+                , button [ class "logout btn" ]
+                    -- Add logout action
                     [ i [ class "icon-lock-open" ] []
                     , text " Logout"
                     ]
@@ -214,74 +292,6 @@ getPasswordVisibility isVisible =
         "obscured"
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
-    case msg of
-        NoOp ->
-            model ! []
-
-        UploadLibrary uploadLibraryContent ->
-            let
-                _ =
-                    Debug.log "Hash Old" uploadLibraryContent.oldHash
-
-                _ =
-                    Debug.log "Hash New" uploadLibraryContent.newHash
-
-                _ =
-                    Debug.log "Library" uploadLibraryContent.libraryData.library
-            in
-                { model | libraryData = Just uploadLibraryContent.libraryData }
-                    ! [ uploadLibraryCmd model.config.apiEndPoint uploadLibraryContent model.libraryData model.masterKey ]
-
-        UploadLibraryResponse _ _ (Ok message) ->
-            let
-                _ =
-                    Debug.log "Upload success" message
-            in
-                model ! []
-
-        UploadLibraryResponse previousLibraryData previousMasterKey (Err errorValue) ->
-            let
-                _ =
-                    Debug.log "Response error" (toString errorValue)
-            in
-                { model
-                    | error = Just "Upload error"
-                    , libraryData = previousLibraryData
-                    , masterKey = previousMasterKey
-                }
-                    ! []
-
-        IncrementIdleTime _ ->
-            if model.idleTime + 1 > model.config.maxIdleTime then
-                logout model ! []
-            else
-                { model | idleTime = model.idleTime + 1 } ! []
-
-        ResetIdleTime _ ->
-            { model | idleTime = 0 } ! []
-
-        EncryptLibrary ->
-            model ! [ createEncryptLibraryCmd model Nothing ]
-
-        TogglePasswordVisibility id ->
-            let
-                updatePassword password =
-                    if password.id == id then
-                        { password | isVisible = not password.isVisible }
-                    else
-                        password
-            in
-                { model | passwords = List.map updatePassword model.passwords } ! []
-
-        CopyPasswordToClipboard elementId ->
-            model ! [ copyPasswordToClipboard elementId ]
-
-        UpdateFilter newFilter ->
-            { model | filter = newFilter, idleTime = 0 } ! []
-
-
 logout : Model -> Model
 logout model =
     { model
@@ -292,22 +302,22 @@ logout model =
     }
 
 
-uploadLibraryCmd : String -> UploadLibraryContent -> Maybe LibraryData -> Maybe MasterKey -> Cmd Msg
-uploadLibraryCmd apiEndPoint libraryContent oldLibraryData oldMasterKey =
+uploadLibraryCmd : String -> UploadLibraryRequest.UploadLibraryRequest -> Library.Library -> MasterKey -> Cmd Msg
+uploadLibraryCmd apiEndPoint uploadLibraryRequest oldLibrary oldMasterKey =
     Http.request
         { method = "POST"
         , headers = [ Http.header "Content-Type" "application/x-www-form-urlencoded" ]
         , url = apiEndPoint
-        , body = (uploadLibraryBody libraryContent)
+        , body = (uploadLibraryBody uploadLibraryRequest)
         , expect = Http.expectString
         , timeout = Just (Time.second * 20)
         , withCredentials = False
         }
-        |> Http.send (UploadLibraryResponse oldLibraryData oldMasterKey)
+        |> Http.send (UploadLibraryResponse oldLibrary oldMasterKey)
 
 
-uploadLibraryBody : UploadLibraryContent -> Http.Body
-uploadLibraryBody { oldHash, newHash, libraryData } =
+uploadLibraryBody : UploadLibraryRequest.UploadLibraryRequest -> Http.Body
+uploadLibraryBody { oldHash, newHash, library } =
     let
         addNewHashIfChanged oldHash newHash =
             if oldHash == newHash then
@@ -316,7 +326,7 @@ uploadLibraryBody { oldHash, newHash, libraryData } =
                 "&newhash=" ++ newHash
 
         encodedLibrary =
-            encodeLibraryData libraryData
+            Library.encodeAsString library
                 |> Http.encodeUri
 
         params =
@@ -325,17 +335,16 @@ uploadLibraryBody { oldHash, newHash, libraryData } =
         Http.stringBody "application/x-www-form-urlencoded" params
 
 
-unwrapPasswords : List WrappedPassword -> List Password
-unwrapPasswords wrappedPasswords =
-    List.map (\wrapper -> wrapper.password) wrappedPasswords
-
-
 createEncryptLibraryCmd : Model -> Maybe MasterKey -> Cmd Msg
 createEncryptLibraryCmd model newMasterKey =
-    EncryptLibraryDataContent
-        model.masterKey
-        model.libraryData
-        (Maybe.withDefault model.masterKey (Just newMasterKey))
-        -- Ugly line could be better
-        (unwrapPasswords model.passwords)
-        |> encryptLibraryData
+    let
+        unwrapPasswords : List WrappedPassword -> List Password.Password
+        unwrapPasswords =
+            List.map (\wrapper -> wrapper.password)
+    in
+        EncryptLibraryRequest.EncryptLibraryRequest
+            model.masterKey
+            model.library
+            (Maybe.withDefault model.masterKey (Just newMasterKey))
+            (unwrapPasswords model.passwords)
+            |> Ports.encryptLibrary

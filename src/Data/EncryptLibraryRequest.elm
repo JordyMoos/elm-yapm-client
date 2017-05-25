@@ -9,16 +9,6 @@ import Util exposing ((=>))
 type alias EncryptLibraryRequest =
     { oldMasterKey : String
     , oldLibrary : Library.Library
-    , newMasterKey : String
+    , newMasterKey : Maybe String
     , passwords : List Password.Password
     }
-
-
-encode : EncryptLibraryRequest -> Value
-encode request =
-    Encode.object
-        [ "oldMasterKey" => Encode.string request.oldMasterKey
-        , "oldLibrary" => Library.encode request.oldLibrary
-        , "newMasterKey" => Encode.string request.newMasterKey
-        , "passwords" => Password.encodePasswords request.passwords
-        ]
