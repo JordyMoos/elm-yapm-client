@@ -13,6 +13,7 @@ import Data.Library as Library
 import Data.UploadLibraryRequest as UploadLibraryRequest
 import Data.Notification as Notification
 import Data.EncryptLibraryRequest as EncryptLibraryRequest
+import Data.User as User
 import Ports
 
 
@@ -61,8 +62,8 @@ type Msg
     | UpdateFilter String
 
 
-init : Flags -> List Password.Password -> MasterKey -> Library.Library -> ( Model, Cmd Msg )
-init flags passwords masterKey library =
+init : Flags -> User.User -> ( Model, Cmd Msg )
+init flags { library, masterKey, passwords } =
     let
         lastId =
             List.length passwords - 1

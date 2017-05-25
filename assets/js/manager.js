@@ -2,21 +2,20 @@ import { config } from './config';
 import { createCryptoManager, generateRandomPassword } from './crypto';
 
 
-function decryptLibrary (request) {
-  let { masterKey, libraryData } = request;
+function decryptLibrary (masterKey, library) {
   let cryptoManager = createCryptoManager(
     masterKey,
-    libraryData
+    library
   );
 
   return cryptoManager.getPasswordList();
 }
 
 function encryptLibrary (request) {
-  let { oldMasterKey, oldLibraryData, newMasterKey, passwords } = request;
+  let { oldMasterKey, oldLibrary, newMasterKey, passwords } = request;
   let cryptoManager = createCryptoManager(
     oldMasterKey,
-    oldLibraryData
+    oldLibrary
   );
 
   let oldHashPromise = cryptoManager.getHash();
