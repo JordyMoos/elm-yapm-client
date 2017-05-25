@@ -27,6 +27,12 @@ encode library =
         ]
 
 
+encodeAsString : Library -> String
+encodeAsString library =
+    encode library
+        |> Encode.encode 0
+
+
 decodeFromJson : Value -> Maybe Library
 decodeFromJson json =
     json
