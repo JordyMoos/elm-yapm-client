@@ -40,8 +40,11 @@
       var app = Elm.Main.fullscreen(window.yapm.config);
       app.ports.parseLibraryData.subscribe(function (request) {
         window.yapm.decryptLibrary(request)
-          .then(function (passwords) {
+          let { masterKey, library } = request;
+          .then(function (masterKey, library) {
             app.ports.loginSuccess.send({
+              library: library,
+              masterKey: masterKey,
               passwords: passwords
             });
           })

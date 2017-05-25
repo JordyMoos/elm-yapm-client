@@ -21,8 +21,8 @@ type alias Passwords =
     }
 
 
-passwordDecoder : Decoder Password
-passwordDecoder =
+decoder : Decoder Password
+decoder =
     decode Password
         |> required "comment" Decode.string
         |> required "password" Decode.string
@@ -34,7 +34,7 @@ passwordDecoder =
 passwordsDecoder : Decoder Passwords
 passwordsDecoder =
     decode Passwords
-        |> required "passwords" (Decode.list passwordDecoder)
+        |> required "passwords" (Decode.list decoder)
 
 
 encode : Password -> Value
