@@ -51,7 +51,7 @@ type Msg
     = NoOp
     | SetNotification Value
     | ClearNotification
-    | UploadLibrary UploadLibraryRequest.UploadLibraryRequest
+    | UploadLibrary Value
     | UploadLibraryResponse Library.Library MasterKey (Result Http.Error String)
     | IncrementIdleTime Time.Time
     | ResetIdleTime Mouse.Position
@@ -107,19 +107,21 @@ update msg model =
         NoOp ->
             model ! []
 
-        UploadLibrary uploadLibraryRequest ->
+        UploadLibrary json ->
             let
-                _ =
-                    Debug.log "Hash Old" uploadLibraryRequest.oldHash
+                uploadLibraryRequest =
+                    UploadLibraryRequest.decodeFromJson json
 
-                _ =
-                    Debug.log "Hash New" uploadLibraryRequest.newHash
+                response =
+                    case uploadLibraryRequest of
+                        Just uploadData ->
+                            { model | library = uploadData.library }
+                                ! [ uploadLibraryCmd model.flags.apiEndPoint uploadData model.library model.masterKey ]
 
-                _ =
-                    Debug.log "Library" uploadLibraryRequest.library.library
+                        Nothing ->
+                            model ! []
             in
-                { model | library = Just uploadLibraryRequest.library }
-                    ! [ uploadLibraryCmd model.flags.apiEndPoint uploadLibraryRequest model.librar model.masterKey ]
+                response
 
         UploadLibraryResponse _ _ (Ok message) ->
             let
@@ -134,14 +136,14 @@ update msg model =
                     Debug.log "Response error" (toString errorValue)
             in
                 { model
-                    | notification = Notification.initError "Upload error"
+                    | notification = Just <| Notification.initError "Upload error"
                     , library = previousLibrary
                     , masterKey = previousMasterKey
                 }
                     ! []
 
         IncrementIdleTime _ ->
-            if model.idleTime + 1 > model.config.maxIdleTime then
+            if model.idleTime + 1 > model.flags.maxIdleTime then
                 model ! []
                 -- request logout here
             else
@@ -168,6 +170,16 @@ update msg model =
 
         UpdateFilter newFilter ->
             { model | filter = newFilter, idleTime = 0 } ! []
+
+        SetNotification json ->
+            let
+                notification =
+                    Notification.decodeFromJson json
+            in
+                { model | notification = notification } ! []
+
+        ClearNotification ->
+            { model | notification = Nothing } ! []
 
 
 view : Model -> Html Msg
@@ -292,16 +304,6 @@ getPasswordVisibility isVisible =
         "obscured"
 
 
-logout : Model -> Model
-logout model =
-    { model
-        | passwords = []
-        , masterKey = Nothing
-        , idleTime = 0
-        , isAuthenticated = False
-    }
-
-
 uploadLibraryCmd : String -> UploadLibraryRequest.UploadLibraryRequest -> Library.Library -> MasterKey -> Cmd Msg
 uploadLibraryCmd apiEndPoint uploadLibraryRequest oldLibrary oldMasterKey =
     Http.request
@@ -345,6 +347,6 @@ createEncryptLibraryCmd model newMasterKey =
         EncryptLibraryRequest.EncryptLibraryRequest
             model.masterKey
             model.library
-            (Maybe.withDefault model.masterKey (Just newMasterKey))
+            (Maybe.withDefault model.masterKey newMasterKey)
             (unwrapPasswords model.passwords)
             |> Ports.encryptLibrary

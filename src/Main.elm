@@ -6,6 +6,7 @@ import Time
 import Mouse
 import PageState.Auth as Auth
 import PageState.Unauth as Unauth
+import Flags exposing (Flags)
 
 
 type PageState
@@ -28,7 +29,7 @@ initModel flags =
 
 type Msg
     = AuthorizedMsg Auth.Msg
-    | AuthorizedMsg Unauth.Msg
+    | UnauthorizedMsg Unauth.Msg
     | LoginSuccess
 
 
