@@ -60,6 +60,7 @@ type Msg
     | TogglePasswordVisibility Int
     | CopyPasswordToClipboard ElementId
     | UpdateFilter String
+    | Logout
 
 
 init : Config -> User.User -> ( Model, Cmd Msg )
@@ -182,6 +183,9 @@ update msg model =
         ClearNotification ->
             { model | notification = Nothing } ! []
 
+        Logout ->
+            model ! []
+
 
 view : Model -> Html Msg
 view model =
@@ -232,8 +236,7 @@ viewNavBar model =
                     [ i [ class "icon-floppy" ] []
                     , text " Save"
                     ]
-                , button [ class "logout btn" ]
-                    -- Add logout action
+                , button [ class "logout btn", onClick Logout ]
                     [ i [ class "icon-lock-open" ] []
                     , text " Logout"
                     ]
