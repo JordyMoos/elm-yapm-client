@@ -1,6 +1,5 @@
 module PageState.Unauth exposing (Model, Msg, init, subscriptions, update, view)
 
-import Flags exposing (Flags)
 import Task
 import Dom
 import Http
@@ -13,10 +12,11 @@ import Maybe.Extra exposing (isNothing)
 import Data.Notification as Notification
 import Data.Library as Library
 import Data.LoginRequest as LoginRequest
+import Data.Config exposing (Config)
 
 
 type alias Model =
-    { flags : Flags
+    { config : Config
     , notification : Maybe Notification.Notification
     , isDownloading : Bool
     , library : Maybe Library.Library
@@ -35,16 +35,16 @@ type Msg
     | ClearNotification
 
 
-init : Flags -> ( Model, Cmd Msg )
-init flags =
-    { flags = flags
+init : Config -> ( Model, Cmd Msg )
+init config =
+    { config = config
     , notification = Nothing
     , isDownloading = False
     , library = Nothing
     , masterKeyInput = ""
     , masterKey = Nothing
     }
-        ! [ focusMasterKeyInputCmd, downloadLibraryCmd flags.apiEndPoint ]
+        ! [ focusMasterKeyInputCmd, downloadLibraryCmd config.apiEndPoint ]
 
 
 subscriptions : Sub Msg
@@ -60,7 +60,7 @@ update msg model =
             model ! []
 
         DownloadLibrary ->
-            model ! [ downloadLibraryCmd model.flags.apiEndPoint ]
+            model ! [ downloadLibraryCmd model.config.apiEndPoint ]
 
         NewLibrary (Ok newLibrary) ->
             let

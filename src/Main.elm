@@ -8,7 +8,7 @@ import Json.Decode as Decode
 import Json.Encode as Encode exposing (Value)
 import PageState.Auth as Auth
 import PageState.Unauth as Unauth
-import Flags exposing (Flags)
+import Data.Config exposing (Config)
 import Ports
 import Data.User as User
 
@@ -19,7 +19,7 @@ type PageState
 
 
 type alias Model =
-    { config : Flags
+    { config : Config
     , state : PageState
     }
 
@@ -30,7 +30,7 @@ type Msg
     | SetUser (Maybe User.User)
 
 
-main : Program Flags Model Msg
+main : Program Config Model Msg
 main =
     Html.programWithFlags
         { init = init
@@ -40,13 +40,13 @@ main =
         }
 
 
-init : Flags -> ( Model, Cmd Msg )
-init flags =
+init : Config -> ( Model, Cmd Msg )
+init config =
     let
         ( subModel, subCmd ) =
-            Unauth.init flags
+            Unauth.init config
     in
-        ( Model flags (Unauthorized subModel), Cmd.map UnauthorizedMsg subCmd )
+        ( Model config (Unauthorized subModel), Cmd.map UnauthorizedMsg subCmd )
 
 
 subscriptions : Model -> Sub Msg
