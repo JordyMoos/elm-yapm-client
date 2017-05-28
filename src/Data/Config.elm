@@ -1,7 +1,7 @@
-module Flags exposing (Flags)
+module Data.Config exposing (Config)
 
 
-type alias Flags =
+type alias Config =
     { apiEndPoint : String
     , localStorageKey : String
     , maxIdleTime : Int

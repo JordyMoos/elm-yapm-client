@@ -7,7 +7,7 @@ import Time
 import Mouse
 import Http
 import Json.Decode as Decode exposing (Value)
-import Flags exposing (Flags)
+import Data.Config exposing (Config)
 import Data.Password as Password
 import Data.Library as Library
 import Data.UploadLibraryRequest as UploadLibraryRequest
@@ -18,7 +18,7 @@ import Ports
 
 
 type alias Model =
-    { flags : Flags
+    { config : Config
     , masterKey : MasterKey
     , library : Library.Library
     , passwords : List WrappedPassword
@@ -62,8 +62,8 @@ type Msg
     | UpdateFilter String
 
 
-init : Flags -> User.User -> ( Model, Cmd Msg )
-init flags { library, masterKey, passwords } =
+init : Config -> User.User -> ( Model, Cmd Msg )
+init config { library, masterKey, passwords } =
     let
         lastId =
             List.length passwords - 1
@@ -78,7 +78,7 @@ init flags { library, masterKey, passwords } =
                 ids
 
         model =
-            { flags = flags
+            { config = config
             , masterKey = masterKey
             , library = library
             , passwords = wrappedPasswords
@@ -117,7 +117,7 @@ update msg model =
                     case uploadLibraryRequest of
                         Just uploadData ->
                             { model | library = uploadData.library }
-                                ! [ uploadLibraryCmd model.flags.apiEndPoint uploadData model.library model.masterKey ]
+                                ! [ uploadLibraryCmd model.config.apiEndPoint uploadData model.library model.masterKey ]
 
                         Nothing ->
                             model ! []
@@ -144,7 +144,7 @@ update msg model =
                     ! []
 
         IncrementIdleTime _ ->
-            if model.idleTime + 1 > model.flags.maxIdleTime then
+            if model.idleTime + 1 > model.config.maxIdleTime then
                 model ! []
                 -- request logout here
             else
