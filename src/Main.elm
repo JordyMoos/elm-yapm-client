@@ -83,6 +83,13 @@ update msg model =
                 in
                     ( { model | state = Authorized authModel }, (Cmd.map AuthorizedMsg authCmd) )
 
+            ( AuthorizedMsg (Auth.Logout), Authorized authModel ) ->
+                let
+                    ( newModel, newCmd ) =
+                        Unauth.init model.config
+                in
+                    ( { model | state = Unauthorized newModel }, (Cmd.map UnauthorizedMsg newCmd) )
+
             ( AuthorizedMsg msg, Authorized authModel ) ->
                 toPage Authorized AuthorizedMsg Auth.update msg authModel
 
