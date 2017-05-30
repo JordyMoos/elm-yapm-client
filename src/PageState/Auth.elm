@@ -63,6 +63,10 @@ type Msg
     | Logout
 
 
+type SupervisorMsg
+    = Quit
+
+
 init : Config -> User.User -> ( Model, Cmd Msg )
 init config { library, masterKey, passwords } =
     let
@@ -103,7 +107,7 @@ subscriptions =
         ]
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : Msg -> Model -> ( Model, Cmd Msg, List SupervisorMsg )
 update msg model =
     case msg of
         NoOp ->
