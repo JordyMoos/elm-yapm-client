@@ -70,7 +70,7 @@ update msg model =
         toPage : (a -> PageState) -> (b -> Msg) -> (b -> a -> ( a, Cmd b )) -> b -> a -> ( Model, Cmd Msg )
         toPage toModel toMsg subUpdate subMsg subModel =
             let
-                ( newModel, newCmd, supervisorMsgs ) =
+                ( newModel, newCmd, supervisorCmds ) =
                     subUpdate subMsg subModel
             in
                 ( { model | state = toModel newModel }, Cmd.map toMsg newCmd )
