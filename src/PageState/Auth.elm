@@ -63,7 +63,7 @@ type Msg
     | Logout
 
 
-type SupervisorMsg
+type SupervisorCmd
     = Quit
 
 
@@ -107,7 +107,7 @@ subscriptions =
         ]
 
 
-update : Msg -> Model -> ( Model, Cmd Msg, List SupervisorMsg )
+update : Msg -> Model -> ( Model, Cmd Msg, List SupervisorCmd )
 update msg model =
     case msg of
         NoOp ->
