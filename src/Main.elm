@@ -1,16 +1,15 @@
 port module Main exposing (main)
 
-import Basics exposing (..)
+import Data.Config exposing (Config)
+import Data.User as User
 import Html exposing (..)
-import Time
-import Mouse
 import Json.Decode as Decode
 import Json.Encode as Encode exposing (Value)
-import PageState.Auth as Auth
+import Mouse
+import PageState.Auth as Auth exposing (SupervisorCmd)
 import PageState.Unauth as Unauth
-import Data.Config exposing (Config)
 import Ports
-import Data.User as User
+import Time
 
 
 type PageState
@@ -66,39 +65,43 @@ loginSuccess =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    let
-        toPage : (a -> PageState) -> (b -> Msg) -> (b -> a -> ( a, Cmd b )) -> b -> a -> ( Model, Cmd Msg )
-        toPage toModel toMsg subUpdate subMsg subModel =
+    case ( msg, model.state ) of
+        ( SetUser (Just user), _ ) ->
             let
-                ( newModel, newCmd, supervisorCmds ) =
-                    subUpdate subMsg subModel
+                ( authModel, authCmd ) =
+                    Auth.init model.config user
             in
-                ( { model | state = toModel newModel }, Cmd.map toMsg newCmd )
-    in
-        case ( msg, model.state ) of
-            ( SetUser (Just user), _ ) ->
-                let
-                    ( authModel, authCmd ) =
-                        Auth.init model.config user
-                in
-                    ( { model | state = Authorized authModel }, (Cmd.map AuthorizedMsg authCmd) )
+                ( { model | state = Authorized authModel }, (Cmd.map AuthorizedMsg authCmd) )
 
-            ( AuthorizedMsg (Auth.Logout), Authorized authModel ) ->
-                let
-                    ( newModel, newCmd ) =
-                        Unauth.init model.config
-                in
-                    ( { model | state = Unauthorized newModel }, (Cmd.map UnauthorizedMsg newCmd) )
+        ( AuthorizedMsg subMsg, Authorized subModel ) ->
+            let
+                ( authModel, authCmd, supervisorCmd ) =
+                    Auth.update subMsg subModel
 
-            ( AuthorizedMsg msg, Authorized authModel ) ->
-                toPage Authorized AuthorizedMsg Auth.update msg authModel
+                ( newModel, newCmd ) =
+                    case supervisorCmd of
+                        Auth.None ->
+                            ( Authorized authModel, Cmd.map AuthorizedMsg authCmd )
 
-            ( UnauthorizedMsg msg, Unauthorized unauthModel ) ->
-                toPage Unauthorized UnauthorizedMsg Unauth.update msg unauthModel
+                        Auth.Quit ->
+                            let
+                                ( unauthModel, unauthCmd ) =
+                                    Unauth.init model.config
+                            in
+                                ( Unauthorized unauthModel, (Cmd.map UnauthorizedMsg unauthCmd) )
+            in
+                ( { model | state = newModel }, newCmd )
 
-            -- bips for wrong message in current state
-            ( _, _ ) ->
-                model ! []
+        ( UnauthorizedMsg subMsg, Unauthorized subModel ) ->
+            let
+                ( newModel, newCmd ) =
+                    Unauth.update subMsg subModel
+            in
+                ( { model | state = Unauthorized newModel }, Cmd.map UnauthorizedMsg newCmd )
+
+        -- bips for wrong message in current state
+        ( _, _ ) ->
+            model ! []
 
 
 view : Model -> Html Msg

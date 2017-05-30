@@ -1,29 +1,29 @@
 module Data.Library exposing (..)
 
 import Json.Decode as Decode exposing (Decoder)
-import Json.Decode.Pipeline as Pipeline exposing (decode, required)
+import Json.Decode.Pipeline as Pipeline exposing (decode, required, optional)
 import Json.Encode as Encode exposing (Value)
 import Util exposing ((=>))
 
 
 type alias Library =
-    { library : String
-    , hmac : String
+    { hmac : String
+    , library : String
     }
 
 
 decoder : Decoder Library
 decoder =
     decode Library
-        |> required "library" Decode.string
         |> required "hmac" Decode.string
+        |> required "library" Decode.string
 
 
 encode : Library -> Value
 encode library =
     Encode.object
-        [ "library" => Encode.string library.library
-        , "hmac" => Encode.string library.hmac
+        [ "hmac" => Encode.string library.hmac
+        , "library" => Encode.string library.library
         ]
 
 

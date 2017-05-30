@@ -43,7 +43,10 @@
         window.yapm.decryptLibrary(masterKey, library)
           .then(function (passwords) {
             app.ports.loginSuccess.send({
-              library: library,
+              library: {
+                hmac: library.hmac,
+                library: library.library
+              },
               masterKey: masterKey,
               passwords: passwords
             });
@@ -59,11 +62,16 @@
       app.ports.encryptLibrary.subscribe(function (request) {
         window.yapm.encryptLibrary(request)
           .then(function (data) {
-            app.ports.uploadLibrary.send({
-              oldHash: data[0],
-              library: data[1],
-              newHash: data[2]
-            });
+            let [ oldHash, library, newHash ] = data;
+            let response = {
+              oldHash: oldHash,
+              newHash: newHash,
+              library: {
+                hmac: library.hmac,
+                library: library.library
+              }
+            };
+            app.ports.encryptLibrarySuccess.send(response);
           })
           .catch(function (error) {
             app.ports.notification.send({
