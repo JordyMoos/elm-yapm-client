@@ -10,9 +10,9 @@ import Json.Decode as Decode exposing (Value)
 import Data.Config exposing (Config)
 import Data.Password as Password
 import Data.Library as Library
-import Data.UploadLibraryRequest as UploadLibraryRequest
 import Data.Notification as Notification
 import Data.EncryptLibraryRequest as EncryptLibraryRequest
+import Data.EncryptLibrarySuccess as EncryptLibrarySuccess
 import Data.User as User
 import Ports
 
@@ -52,7 +52,7 @@ type Msg
     = NoOp
     | SetNotification Value
     | ClearNotification
-    | UploadLibrary Value
+    | UploadLibrary (Maybe EncryptLibrarySuccess.EncryptLibrarySuccess)
     | UploadLibraryResponse Library.Library MasterKey (Result Http.Error String)
     | IncrementIdleTime Time.Time
     | ResetIdleTime Mouse.Position
@@ -64,7 +64,8 @@ type Msg
 
 
 type SupervisorCmd
-    = Quit
+    = None
+    | Quit
 
 
 init : Config -> User.User -> ( Model, Cmd Msg )
@@ -99,7 +100,7 @@ init config { library, masterKey, passwords } =
 subscriptions : Sub Msg
 subscriptions =
     Sub.batch
-        [ Ports.encryptLibrarySuccess UploadLibrary
+        [ Sub.map UploadLibrary libraryEncriptionSuccess
         , Time.every Time.second IncrementIdleTime
         , Mouse.clicks ResetIdleTime
         , Mouse.moves ResetIdleTime
@@ -107,59 +108,58 @@ subscriptions =
         ]
 
 
-update : Msg -> Model -> ( Model, Cmd Msg, List SupervisorCmd )
+libraryEncriptionSuccess : Sub (Maybe EncryptLibrarySuccess.EncryptLibrarySuccess)
+libraryEncriptionSuccess =
+    Ports.encryptLibrarySuccess (Decode.decodeValue EncryptLibrarySuccess.decoder >> Result.toMaybe)
+
+
+update : Msg -> Model -> ( Model, Cmd Msg, SupervisorCmd )
 update msg model =
     case msg of
         NoOp ->
-            model ! []
+            ( model, Cmd.none, None )
 
-        UploadLibrary json ->
-            let
-                uploadLibraryRequest =
-                    UploadLibraryRequest.decodeFromJson json
+        UploadLibrary (Just uploadData) ->
+            ( { model | library = uploadData.library }
+            , uploadLibraryCmd model.config.apiEndPoint uploadData model.library model.masterKey
+            , None
+            )
 
-                response =
-                    case uploadLibraryRequest of
-                        Just uploadData ->
-                            { model | library = uploadData.library }
-                                ! [ uploadLibraryCmd model.config.apiEndPoint uploadData model.library model.masterKey ]
-
-                        Nothing ->
-                            model ! []
-            in
-                response
+        UploadLibrary Nothing ->
+            ( { model | notification = Just <| Notification.initError "Failed to parse the encrypted library" }, Cmd.none, None )
 
         UploadLibraryResponse _ _ (Ok message) ->
             let
                 _ =
                     Debug.log "Upload success" message
             in
-                model ! []
+                ( model, Cmd.none, None )
 
         UploadLibraryResponse previousLibrary previousMasterKey (Err errorValue) ->
             let
                 _ =
                     Debug.log "Response error" (toString errorValue)
             in
-                { model
+                ( { model
                     | notification = Just <| Notification.initError "Upload error"
                     , library = previousLibrary
                     , masterKey = previousMasterKey
-                }
-                    ! []
+                  }
+                , Cmd.none
+                , None
+                )
 
         IncrementIdleTime _ ->
             if model.idleTime + 1 > model.config.maxIdleTime then
-                model ! []
-                -- request logout here
+                ( model, Cmd.none, Quit )
             else
-                { model | idleTime = model.idleTime + 1 } ! []
+                ( { model | idleTime = model.idleTime + 1 }, Cmd.none, None )
 
         ResetIdleTime _ ->
-            { model | idleTime = 0 } ! []
+            ( { model | idleTime = 0 }, Cmd.none, None )
 
         EncryptLibrary ->
-            model ! [ createEncryptLibraryCmd model Nothing ]
+            ( model, createEncryptLibraryCmd model Nothing, None )
 
         TogglePasswordVisibility id ->
             let
@@ -169,26 +169,26 @@ update msg model =
                     else
                         password
             in
-                { model | passwords = List.map updatePassword model.passwords } ! []
+                ( { model | passwords = List.map updatePassword model.passwords }, Cmd.none, None )
 
         CopyPasswordToClipboard elementId ->
-            model ! [ Ports.copyPasswordToClipboard elementId ]
+            ( model, Ports.copyPasswordToClipboard elementId, None )
 
         UpdateFilter newFilter ->
-            { model | filter = newFilter, idleTime = 0 } ! []
+            ( { model | filter = newFilter, idleTime = 0 }, Cmd.none, None )
 
         SetNotification json ->
             let
                 notification =
                     Notification.decodeFromJson json
             in
-                { model | notification = notification } ! []
+                ( { model | notification = notification }, Cmd.none, None )
 
         ClearNotification ->
-            { model | notification = Nothing } ! []
+            ( { model | notification = Nothing }, Cmd.none, None )
 
         Logout ->
-            model ! []
+            ( model, Cmd.none, Quit )
 
 
 view : Model -> Html Msg
@@ -312,7 +312,7 @@ getPasswordVisibility isVisible =
         "obscured"
 
 
-uploadLibraryCmd : String -> UploadLibraryRequest.UploadLibraryRequest -> Library.Library -> MasterKey -> Cmd Msg
+uploadLibraryCmd : String -> EncryptLibrarySuccess.EncryptLibrarySuccess -> Library.Library -> MasterKey -> Cmd Msg
 uploadLibraryCmd apiEndPoint uploadLibraryRequest oldLibrary oldMasterKey =
     Http.request
         { method = "POST"
@@ -326,7 +326,7 @@ uploadLibraryCmd apiEndPoint uploadLibraryRequest oldLibrary oldMasterKey =
         |> Http.send (UploadLibraryResponse oldLibrary oldMasterKey)
 
 
-uploadLibraryBody : UploadLibraryRequest.UploadLibraryRequest -> Http.Body
+uploadLibraryBody : EncryptLibrarySuccess.EncryptLibrarySuccess -> Http.Body
 uploadLibraryBody { oldHash, newHash, library } =
     let
         addNewHashIfChanged oldHash newHash =
