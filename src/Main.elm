@@ -6,7 +6,7 @@ import Html exposing (..)
 import Json.Decode as Decode
 import Json.Encode as Encode exposing (Value)
 import Mouse
-import PageState.Auth as Auth exposing (SupervisorCmd)
+import PageState.Auth as Auth
 import PageState.Unauth as Unauth
 import Ports
 import Time
@@ -26,7 +26,6 @@ type alias Model =
 type Msg
     = AuthorizedMsg Auth.Msg
     | UnauthorizedMsg Unauth.Msg
-    | SetUser (Maybe User.User)
 
 
 main : Program Config Model Msg
@@ -55,24 +54,12 @@ subscriptions model =
             (Sub.map AuthorizedMsg Auth.subscriptions)
 
         Unauthorized _ ->
-            Sub.batch [ (Sub.map UnauthorizedMsg Unauth.subscriptions), Sub.map SetUser loginSuccess ]
-
-
-loginSuccess : Sub (Maybe User.User)
-loginSuccess =
-    Ports.loginSuccess (Decode.decodeValue User.decoder >> Result.toMaybe)
+            (Sub.map UnauthorizedMsg Unauth.subscriptions)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case ( msg, model.state ) of
-        ( SetUser (Just user), _ ) ->
-            let
-                ( authModel, authCmd ) =
-                    Auth.init model.config user
-            in
-                ( { model | state = Authorized authModel }, (Cmd.map AuthorizedMsg authCmd) )
-
         ( AuthorizedMsg subMsg, Authorized subModel ) ->
             let
                 ( authModel, authCmd, supervisorCmd ) =
@@ -94,10 +81,22 @@ update msg model =
 
         ( UnauthorizedMsg subMsg, Unauthorized subModel ) ->
             let
-                ( newModel, newCmd ) =
+                ( unauthModel, unauthCmd, supervisorCmd ) =
                     Unauth.update subMsg subModel
+
+                ( newModel, newCmd ) =
+                    case supervisorCmd of
+                        Unauth.None ->
+                            ( Unauthorized unauthModel, Cmd.map UnauthorizedMsg unauthCmd )
+
+                        Unauth.Login user ->
+                            let
+                                ( authModel, authCmd ) =
+                                    Auth.init model.config user
+                            in
+                                ( Authorized authModel, (Cmd.map AuthorizedMsg authCmd) )
             in
-                ( { model | state = Unauthorized newModel }, Cmd.map UnauthorizedMsg newCmd )
+                ( { model | state = newModel }, newCmd )
 
         -- bips for wrong message in current state
         ( _, _ ) ->

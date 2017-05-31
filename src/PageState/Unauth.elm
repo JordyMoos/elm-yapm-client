@@ -1,4 +1,4 @@
-module PageState.Unauth exposing (Model, Msg, init, subscriptions, update, view)
+module PageState.Unauth exposing (..)
 
 import Task
 import Dom
@@ -12,6 +12,7 @@ import Maybe.Extra exposing (isNothing)
 import Data.Notification as Notification
 import Data.Library as Library
 import Data.LoginRequest as LoginRequest
+import Data.User as User
 import Data.Config exposing (Config)
 
 
@@ -33,6 +34,12 @@ type Msg
     | SubmitAuthForm
     | SetNotification Value
     | ClearNotification
+    | SetUser (Maybe User.User)
+
+
+type SupervisorCmd
+    = None
+    | Login User.User
 
 
 init : Config -> ( Model, Cmd Msg )
@@ -50,34 +57,41 @@ init config =
 subscriptions : Sub Msg
 subscriptions =
     Sub.batch
-        [ Ports.notification SetNotification ]
+        [ Ports.notification SetNotification
+        , Sub.map SetUser loginSuccess
+        ]
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+loginSuccess : Sub (Maybe User.User)
+loginSuccess =
+    Ports.loginSuccess (Decode.decodeValue User.decoder >> Result.toMaybe)
+
+
+update : Msg -> Model -> ( Model, Cmd Msg, SupervisorCmd )
 update msg model =
     case msg of
         NoOp ->
-            model ! []
+            ( model, Cmd.none, None )
 
         DownloadLibrary ->
-            model ! [ downloadLibraryCmd model.config.apiEndPoint ]
+            ( model, downloadLibraryCmd model.config.apiEndPoint, None )
 
         NewLibrary (Ok newLibrary) ->
             let
                 newModel =
                     { model | library = Just newLibrary }
             in
-                newModel ! [ decryptLibraryIfPossibleCmd newModel ]
+                ( newModel, decryptLibraryIfPossibleCmd newModel, None )
 
         NewLibrary (Err _) ->
             let
                 notification =
                     Notification.initError "Fetching library failed"
             in
-                { model | notification = Just notification } ! []
+                ( { model | notification = Just notification }, Cmd.none, None )
 
         SetMasterKeyInput masterKeyInput ->
-            { model | masterKeyInput = masterKeyInput } ! []
+            ( { model | masterKeyInput = masterKeyInput }, Cmd.none, None )
 
         SubmitAuthForm ->
             let
@@ -90,17 +104,27 @@ update msg model =
                 newModel =
                     { model | masterKey = masterKey, masterKeyInput = masterKeyInput }
             in
-                newModel ! [ decryptLibraryIfPossibleCmd newModel ]
+                ( newModel, decryptLibraryIfPossibleCmd newModel, None )
 
         SetNotification json ->
             let
                 notification =
                     Notification.decodeFromJson json
             in
-                { model | notification = notification } ! []
+                ( { model | notification = notification }, Cmd.none, None )
 
         ClearNotification ->
-            { model | notification = Nothing } ! []
+            ( { model | notification = Nothing }, Cmd.none, None )
+
+        SetUser (Just user) ->
+            ( model, Cmd.none, Login user )
+
+        SetUser Nothing ->
+            let
+                notification =
+                    Notification.initError "Could not parse the login success data"
+            in
+                ( { model | notification = Just notification }, Cmd.none, None )
 
 
 view : Model -> Html Msg
