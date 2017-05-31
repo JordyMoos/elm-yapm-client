@@ -31,11 +31,3 @@ encodeAsString : Library -> String
 encodeAsString library =
     encode library
         |> Encode.encode 0
-
-
-decodeFromJson : Value -> Maybe Library
-decodeFromJson json =
-    json
-        |> Decode.decodeValue Decode.string
-        |> Result.toMaybe
-        |> Maybe.andThen (Decode.decodeString decoder >> Result.toMaybe)

@@ -31,12 +31,6 @@ decoder =
         |> required "username" Decode.string
 
 
-passwordsDecoder : Decoder Passwords
-passwordsDecoder =
-    decode Passwords
-        |> required "passwords" (Decode.list decoder)
-
-
 encode : Password -> Value
 encode password =
     Encode.object
@@ -46,26 +40,3 @@ encode password =
         , "url" => Encode.string password.url
         , "username" => Encode.string password.username
         ]
-
-
-encodePasswords : List Password -> Value
-encodePasswords passwords =
-    let
-        mapper password =
-            Encode.object
-                [ "comment" => Encode.string password.comment
-                , "password" => Encode.string password.password
-                , "title" => Encode.string password.title
-                , "url" => Encode.string password.url
-                , "username" => Encode.string password.username
-                ]
-    in
-        List.map mapper passwords |> Encode.list
-
-
-decodePasswordsFromJson : Value -> Maybe Passwords
-decodePasswordsFromJson json =
-    json
-        |> Decode.decodeValue Decode.string
-        |> Result.toMaybe
-        |> Maybe.andThen (Decode.decodeString passwordsDecoder >> Result.toMaybe)

@@ -35,11 +35,3 @@ decoder =
         |> required "oldHash" Decode.string
         |> required "newHash" Decode.string
         |> required "library" Library.decoder
-
-
-decodeFromJson : Value -> Maybe UploadLibraryRequest
-decodeFromJson json =
-    json
-        |> Decode.decodeValue Decode.string
-        |> Result.toMaybe
-        |> Maybe.andThen (Decode.decodeString decoder >> Result.toMaybe)
