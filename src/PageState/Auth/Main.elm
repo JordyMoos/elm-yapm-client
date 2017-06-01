@@ -15,12 +15,12 @@ import Data.EncryptLibraryRequest as EncryptLibraryRequest
 import Data.EncryptLibrarySuccess as EncryptLibrarySuccess
 import Data.User as User
 import Ports
-import PageState.Auth.NewMasterKey exposing (MasterKey)
+import PageState.Auth.NewMasterKey as NewMasterKey
 
 
 type alias Model =
     { config : Config
-    , masterKey : MasterKey
+    , masterKey : String
     , library : Library.Library
     , passwords : List WrappedPassword
     , uid : Int
@@ -48,17 +48,15 @@ type alias PasswordId =
 
 type Modal
     = NoModal
-    | NewMasterKeyModal PageState.Auth.NewMasterKey.Model
+    | NewMasterKeyModal NewMasterKey.Model
 
 
 type Msg
     = NoOp
-    | MasterKey PageState.Auth.NewMasterKey.Msg
-    | OpenMasterKeyModal
     | SetNotification Value
     | ClearNotification
     | UploadLibrary (Maybe EncryptLibrarySuccess.EncryptLibrarySuccess)
-    | UploadLibraryResponse Library.Library MasterKey (Result Http.Error String)
+    | UploadLibraryResponse Library.Library String (Result Http.Error String)
     | IncrementIdleTime Time.Time
     | ResetIdleTime Mouse.Position
     | EncryptLibrary
@@ -66,6 +64,8 @@ type Msg
     | CopyPasswordToClipboard ElementId
     | UpdateFilter String
     | Logout
+    | OpenNewMasterKeyModal
+    | NewMasterKeyMsg NewMasterKey.Msg
 
 
 type SupervisorCmd
@@ -121,36 +121,27 @@ libraryEncriptionSuccess =
 
 update : Msg -> Model -> ( Model, Cmd Msg, SupervisorCmd )
 update msg model =
-    case msg of
-        NoOp ->
+    case ( msg, model.modal ) of
+        ( NoOp, _ ) ->
             ( model, Cmd.none, None )
 
-        OpenMasterKeyModal ->
-            ( { model | modal = (NewMasterKeyModal PageState.Auth.NewMasterKey.init) }
-            , Cmd.none
-            , None
-            )
-
-        MasterKey msg ->
-            ( model, Cmd.none, None )
-
-        UploadLibrary (Just uploadData) ->
+        ( UploadLibrary (Just uploadData), _ ) ->
             ( { model | library = uploadData.library }
             , uploadLibraryCmd model.config.apiEndPoint uploadData model.library model.masterKey
             , None
             )
 
-        UploadLibrary Nothing ->
+        ( UploadLibrary Nothing, _ ) ->
             ( { model | notification = Just <| Notification.initError "Failed to parse the encrypted library" }, Cmd.none, None )
 
-        UploadLibraryResponse _ _ (Ok message) ->
+        ( UploadLibraryResponse _ _ (Ok message), _ ) ->
             let
                 _ =
                     Debug.log "Upload success" message
             in
                 ( model, Cmd.none, None )
 
-        UploadLibraryResponse previousLibrary previousMasterKey (Err errorValue) ->
+        ( UploadLibraryResponse previousLibrary previousMasterKey (Err errorValue), _ ) ->
             let
                 _ =
                     Debug.log "Response error" (toString errorValue)
@@ -164,19 +155,19 @@ update msg model =
                 , None
                 )
 
-        IncrementIdleTime _ ->
+        ( IncrementIdleTime _, _ ) ->
             if model.idleTime + 1 > model.config.maxIdleTime then
                 ( model, Cmd.none, Quit )
             else
                 ( { model | idleTime = model.idleTime + 1 }, Cmd.none, None )
 
-        ResetIdleTime _ ->
+        ( ResetIdleTime _, _ ) ->
             ( { model | idleTime = 0 }, Cmd.none, None )
 
-        EncryptLibrary ->
+        ( EncryptLibrary, _ ) ->
             ( model, createEncryptLibraryCmd model Nothing, None )
 
-        TogglePasswordVisibility id ->
+        ( TogglePasswordVisibility id, _ ) ->
             let
                 updatePassword password =
                     if password.id == id then
@@ -186,24 +177,49 @@ update msg model =
             in
                 ( { model | passwords = List.map updatePassword model.passwords }, Cmd.none, None )
 
-        CopyPasswordToClipboard elementId ->
+        ( CopyPasswordToClipboard elementId, _ ) ->
             ( model, Ports.copyPasswordToClipboard elementId, None )
 
-        UpdateFilter newFilter ->
+        ( UpdateFilter newFilter, _ ) ->
             ( { model | filter = newFilter, idleTime = 0 }, Cmd.none, None )
 
-        SetNotification json ->
+        ( SetNotification json, _ ) ->
             let
                 notification =
                     Notification.decodeFromJson json
             in
                 ( { model | notification = notification }, Cmd.none, None )
 
-        ClearNotification ->
+        ( ClearNotification, _ ) ->
             ( { model | notification = Nothing }, Cmd.none, None )
 
-        Logout ->
+        ( Logout, _ ) ->
             ( model, Cmd.none, Quit )
+
+        ( OpenNewMasterKeyModal, _ ) ->
+            ( { model | modal = (NewMasterKeyModal NewMasterKey.init) }
+            , Cmd.none
+            , None
+            )
+
+        ( NewMasterKeyMsg subMsg, NewMasterKeyModal modal ) ->
+            let
+                ( modalModel, modalCmd, supervisorCmd ) =
+                    NewMasterKey.update subMsg modal
+
+                ( newModel, newCmd ) =
+                    case supervisorCmd of
+                        NewMasterKey.None ->
+                            ( NewMasterKeyModal modalModel, Cmd.map NewMasterKeyMsg modalCmd )
+
+                        NewMasterKey.Quit ->
+                            ( NoModal, Cmd.none )
+            in
+                ( { model | modal = newModel }, newCmd, None )
+
+        -- bips for wrong message in current state
+        ( _, _ ) ->
+            ( model, Cmd.none, None )
 
 
 view : Model -> Html Msg
@@ -215,14 +231,15 @@ view model =
         , viewModal model.modal
         ]
 
+
 viewModal : Modal -> Html Msg
 viewModal modal =
     case modal of
         NoModal ->
-            div [] [ text "no modal!" ]
+            text ""
 
-        NewMasterKeyModal modal ->
-            Html.map MasterKey (PageState.Auth.NewMasterKey.view modal)
+        NewMasterKeyModal subModel ->
+            Html.map NewMasterKeyMsg (NewMasterKey.view subModel)
 
 
 viewNotification : Maybe Notification.Notification -> Html Msg
@@ -269,7 +286,7 @@ viewNavBar model =
                     [ i [ class "icon-lock-open" ] []
                     , text " Logout"
                     ]
-                , button [ class "btn", onClick OpenMasterKeyModal ] [ text "New Master Key" ]
+                , button [ class "btn", onClick OpenNewMasterKeyModal ] [ text "New Master Key" ]
                 ]
             ]
         ]
@@ -338,7 +355,7 @@ getPasswordVisibility isVisible =
         "obscured"
 
 
-uploadLibraryCmd : String -> EncryptLibrarySuccess.EncryptLibrarySuccess -> Library.Library -> MasterKey -> Cmd Msg
+uploadLibraryCmd : String -> EncryptLibrarySuccess.EncryptLibrarySuccess -> Library.Library -> String -> Cmd Msg
 uploadLibraryCmd apiEndPoint uploadLibraryRequest oldLibrary oldMasterKey =
     Http.request
         { method = "POST"
@@ -371,7 +388,7 @@ uploadLibraryBody { oldHash, newHash, library } =
         Http.stringBody "application/x-www-form-urlencoded" params
 
 
-createEncryptLibraryCmd : Model -> Maybe MasterKey -> Cmd Msg
+createEncryptLibraryCmd : Model -> Maybe String -> Cmd Msg
 createEncryptLibraryCmd model newMasterKey =
     let
         unwrapPasswords : List WrappedPassword -> List Password.Password
