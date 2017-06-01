@@ -1,4 +1,4 @@
-module PageState.Auth exposing (..)
+module PageState.Auth.Main exposing (..)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -26,6 +26,7 @@ type alias Model =
     , filter : String
     , idleTime : Int
     , notification : Maybe Notification.Notification
+    , modal : Modal
     }
 
 
@@ -46,6 +47,10 @@ type alias ElementId =
 
 type alias PasswordId =
     Int
+
+
+type Modal
+    = NoModal
 
 
 type Msg
@@ -92,6 +97,7 @@ init config { library, masterKey, passwords } =
             , filter = ""
             , idleTime = 0
             , notification = Nothing
+            , modal = NoModal
             }
     in
         model ! []

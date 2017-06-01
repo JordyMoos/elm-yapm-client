@@ -6,7 +6,7 @@ import Html exposing (..)
 import Json.Decode as Decode
 import Json.Encode as Encode exposing (Value)
 import Mouse
-import PageState.Auth as Auth
+import PageState.Auth.Main as Auth
 import PageState.Unauth as Unauth
 import Ports
 import Time
