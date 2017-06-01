@@ -15,6 +15,7 @@ import Data.EncryptLibraryRequest as EncryptLibraryRequest
 import Data.EncryptLibrarySuccess as EncryptLibrarySuccess
 import Data.User as User
 import Ports
+import PageState.Auth.NewMasterKey exposing (MasterKey)
 
 
 type alias Model =
@@ -37,10 +38,6 @@ type alias WrappedPassword =
     }
 
 
-type alias MasterKey =
-    String
-
-
 type alias ElementId =
     String
 
@@ -51,10 +48,13 @@ type alias PasswordId =
 
 type Modal
     = NoModal
+    | NewMasterKeyModal PageState.Auth.NewMasterKey.Model
 
 
 type Msg
     = NoOp
+    | MasterKey PageState.Auth.NewMasterKey.Msg
+    | OpenMasterKeyModal
     | SetNotification Value
     | ClearNotification
     | UploadLibrary (Maybe EncryptLibrarySuccess.EncryptLibrarySuccess)
@@ -123,6 +123,15 @@ update : Msg -> Model -> ( Model, Cmd Msg, SupervisorCmd )
 update msg model =
     case msg of
         NoOp ->
+            ( model, Cmd.none, None )
+
+        OpenMasterKeyModal ->
+            ( { model | modal = (NewMasterKeyModal PageState.Auth.NewMasterKey.init) }
+            , Cmd.none
+            , None
+            )
+
+        MasterKey msg ->
             ( model, Cmd.none, None )
 
         UploadLibrary (Just uploadData) ->
@@ -203,7 +212,17 @@ view model =
         [ viewNavBar model
         , viewPasswordTable model
         , viewNotification model.notification
+        , viewModal model.modal
         ]
+
+viewModal : Modal -> Html Msg
+viewModal modal =
+    case modal of
+        NoModal ->
+            div [] [ text "no modal!" ]
+
+        NewMasterKeyModal modal ->
+            Html.map MasterKey (PageState.Auth.NewMasterKey.view modal)
 
 
 viewNotification : Maybe Notification.Notification -> Html Msg
@@ -250,6 +269,7 @@ viewNavBar model =
                     [ i [ class "icon-lock-open" ] []
                     , text " Logout"
                     ]
+                , button [ class "btn", onClick OpenMasterKeyModal ] [ text "New Master Key" ]
                 ]
             ]
         ]
