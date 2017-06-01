@@ -207,15 +207,27 @@ update msg model =
                 ( modalModel, modalCmd, supervisorCmd ) =
                     NewMasterKey.update subMsg modal
 
-                ( newModel, newCmd ) =
+                ( newModel, newCmd, notification ) =
                     case supervisorCmd of
                         NewMasterKey.None ->
-                            ( NewMasterKeyModal modalModel, Cmd.map NewMasterKeyMsg modalCmd )
+                            ( NewMasterKeyModal modalModel, Cmd.map NewMasterKeyMsg modalCmd, Nothing )
 
                         NewMasterKey.Quit ->
-                            ( NoModal, Cmd.none )
+                            ( NoModal, Cmd.none, Nothing )
+
+                        NewMasterKey.SetNotification level message ->
+                            ( NewMasterKeyModal modalModel, Cmd.map NewMasterKeyMsg modalCmd, Just <| Notification.init level message )
+
+                -- Temp cheat to no erase an existing notification with nothing
+                newNotification =
+                    case notification of
+                        Just _ ->
+                            notification
+
+                        _ ->
+                            model.notification
             in
-                ( { model | modal = newModel }, newCmd, None )
+                ( { model | modal = newModel, notification = newNotification }, newCmd, None )
 
         -- bips for wrong message in current state
         ( _, _ ) ->

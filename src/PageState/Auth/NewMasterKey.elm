@@ -25,7 +25,7 @@ type State
 type Msg
     = NoOp
     | FieldInput String String
-      --    | Submit
+    | Submit
       --    | SubmitConfirmation
     | Close
 
@@ -33,6 +33,7 @@ type Msg
 type SupervisorCmd
     = None
     | Quit
+    | SetNotification String String
 
 
 init : Model
@@ -61,6 +62,12 @@ update msg model =
             in
                 ( { model | fields = newFields }, Cmd.none, None )
 
+        Submit ->
+            if not (isNewMasterKeyFormValid model.fields) then
+                ( model, Cmd.none, SetNotification "error" "Master key form is not valid" )
+            else
+                ( { model | state = ConfirmationForm }, Cmd.none, None )
+
         Close ->
             ( model, Cmd.none, Quit )
 
@@ -81,7 +88,7 @@ view model =
             , div [ class "modal-footer" ]
                 [ a
                     [ class "btn btn-primary"
-                      -- , onClick (MsgForNewMasterKey NewMasterKeyMsg.Submit)
+                    , onClick Submit
                     ]
                     [ i [ class "icon-attention" ] []
                     , text "Save"
@@ -94,8 +101,8 @@ view model =
 viewNewMasterKeyForm : Model -> Html Msg
 viewNewMasterKeyForm model =
     Html.form [ class "modal-body form-horizontal" ]
-        [ viewFormInput "key" model.fields "New Master Key" "password"
-        , viewFormInput "repeat" model.fields "Master Key Repeat" "password"
+        [ viewFormInput "masterKey" model.fields "New Master Key" "password"
+        , viewFormInput "masterKeyRepeat" model.fields "Master Key Repeat" "password"
         ]
 
 
@@ -127,3 +134,20 @@ viewFormInput dictName fields title inputType =
 
             Nothing ->
                 text ""
+
+
+isNewMasterKeyFormValid : Fields -> Bool
+isNewMasterKeyFormValid fields =
+    let
+        key =
+            Maybe.withDefault "" <| Dict.get "masterKey" fields
+
+        repeat =
+            Maybe.withDefault "" <| Dict.get "masterKeyRepeat" fields
+    in
+        if (String.length key) < 3 then
+            False
+        else if key /= repeat then
+            False
+        else
+            True

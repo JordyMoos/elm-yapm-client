@@ -14,7 +14,12 @@ type alias Notification =
 
 initError : String -> Notification
 initError message =
-    { level = "error"
+    init "error" message
+
+
+init : String -> String -> Notification
+init level message =
+    { level = level
     , message = message
     }
 
