@@ -26,7 +26,7 @@ type Msg
     = NoOp
     | FieldInput String String
     | Submit
-      --    | SubmitConfirmation
+    | SubmitConfirmation
     | Close
 
 
@@ -34,6 +34,7 @@ type SupervisorCmd
     = None
     | Quit
     | SetNotification String String
+    | SaveNewMasterKey (Maybe String)
 
 
 init : Model
@@ -68,6 +69,12 @@ update msg model =
             else
                 ( { model | state = ConfirmationForm }, Cmd.none, None )
 
+        SubmitConfirmation ->
+            if not (isNewMasterKeyFormValid model.fields) then
+                ( model, Cmd.none, SetNotification "error" "Master key form is not valid" )
+            else
+                ( model, Cmd.none, SaveNewMasterKey (Dict.get "masterKey" model.fields) )
+
         Close ->
             ( model, Cmd.none, Quit )
 
@@ -79,6 +86,16 @@ fieldUpdate newValue field =
 
 view : Model -> Html Msg
 view model =
+    case model.state of
+        NewMasterKeyForm ->
+            viewFormModal model
+
+        ConfirmationForm ->
+            viewConfirmationModal model
+
+
+viewFormModal : Model -> Html Msg
+viewFormModal model =
     div []
         [ viewModalContainer
             Close
@@ -93,6 +110,27 @@ view model =
                     [ i [ class "icon-attention" ] []
                     , text "Save"
                     ]
+                ]
+            ]
+        ]
+
+
+viewConfirmationModal : Model -> Html Msg
+viewConfirmationModal model =
+    div []
+        [ viewModalContainer
+            Close
+            NoOp
+            [ viewModalHeader Close "New Master Key Confirmation"
+            , div [ class "modal-body" ]
+                [ p []
+                    [ text "Are you sure you want to create a new master key?" ]
+                ]
+            , div [ class "modal-footer" ]
+                [ a [ class "btn btn-default", onClick Close ]
+                    [ text "No Cancel" ]
+                , a [ class "btn btn-danger", onClick SubmitConfirmation ]
+                    [ text "Yes Create" ]
                 ]
             ]
         ]

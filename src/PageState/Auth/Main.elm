@@ -218,6 +218,9 @@ update msg model =
                         NewMasterKey.SetNotification level message ->
                             ( NewMasterKeyModal modalModel, Cmd.map NewMasterKeyMsg modalCmd, Just <| Notification.init level message )
 
+                        NewMasterKey.SaveNewMasterKey maybeNewMasterKey ->
+                            ( NoModal, createEncryptLibraryCmd model maybeNewMasterKey, Nothing )
+
                 -- Temp cheat to no erase an existing notification with nothing
                 newNotification =
                     case notification of
