@@ -59,29 +59,21 @@ update msg model =
         FieldInput name value ->
             let
                 newFields =
-                    Dict.update name (Maybe.map <| fieldUpdate value) model.fields
+                    Dict.update name (Maybe.map (\x -> value)) model.fields
             in
                 ( { model | fields = newFields }, Cmd.none, None )
 
         Submit ->
-            if not (isNewMasterKeyFormValid model.fields) then
-                ( model, Cmd.none, SetNotification "error" "Master key form is not valid" )
-            else
+            if isNewMasterKeyFormValid model.fields then
                 ( { model | state = ConfirmationForm }, Cmd.none, None )
+            else
+                ( model, Cmd.none, SetNotification "error" "Master key form is not valid" )
 
         SubmitConfirmation ->
-            if not (isNewMasterKeyFormValid model.fields) then
-                ( model, Cmd.none, SetNotification "error" "Master key form is not valid" )
-            else
-                ( model, Cmd.none, SaveNewMasterKey (Dict.get "masterKey" model.fields) )
+            ( model, Cmd.none, SaveNewMasterKey (Dict.get "masterKey" model.fields) )
 
         Close ->
             ( model, Cmd.none, Quit )
-
-
-fieldUpdate : String -> String -> String
-fieldUpdate newValue field =
-    newValue
 
 
 view : Model -> Html Msg
@@ -177,15 +169,7 @@ viewFormInput dictName fields title inputType =
 isNewMasterKeyFormValid : Fields -> Bool
 isNewMasterKeyFormValid fields =
     let
-        key =
-            Maybe.withDefault "" <| Dict.get "masterKey" fields
-
-        repeat =
-            Maybe.withDefault "" <| Dict.get "masterKeyRepeat" fields
+        key = Dict.get "masterKey" fields
+        repeat = Dict.get "masterKeyRepeat" fields
     in
-        if (String.length key) < 3 then
-            False
-        else if key /= repeat then
-            False
-        else
-            True
+        Maybe.withDefault 0 (Maybe.map String.length key) >= 3 && key == repeat

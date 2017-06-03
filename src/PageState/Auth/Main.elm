@@ -121,27 +121,27 @@ libraryEncriptionSuccess =
 
 update : Msg -> Model -> ( Model, Cmd Msg, SupervisorCmd )
 update msg model =
-    case ( msg, model.modal ) of
-        ( NoOp, _ ) ->
+    case msg of
+        NoOp ->
             ( model, Cmd.none, None )
 
-        ( UploadLibrary (Just uploadData), _ ) ->
+        UploadLibrary (Just uploadData) ->
             ( { model | library = uploadData.library }
             , uploadLibraryCmd model.config.apiEndPoint uploadData model.library model.masterKey
             , None
             )
 
-        ( UploadLibrary Nothing, _ ) ->
+        UploadLibrary Nothing ->
             ( { model | notification = Just <| Notification.initError "Failed to parse the encrypted library" }, Cmd.none, None )
 
-        ( UploadLibraryResponse _ _ (Ok message), _ ) ->
+        UploadLibraryResponse _ _ (Ok message) ->
             let
                 _ =
                     Debug.log "Upload success" message
             in
                 ( model, Cmd.none, None )
 
-        ( UploadLibraryResponse previousLibrary previousMasterKey (Err errorValue), _ ) ->
+        UploadLibraryResponse previousLibrary previousMasterKey (Err errorValue) ->
             let
                 _ =
                     Debug.log "Response error" (toString errorValue)
@@ -155,19 +155,19 @@ update msg model =
                 , None
                 )
 
-        ( IncrementIdleTime _, _ ) ->
+        IncrementIdleTime _ ->
             if model.idleTime + 1 > model.config.maxIdleTime then
                 ( model, Cmd.none, Quit )
             else
                 ( { model | idleTime = model.idleTime + 1 }, Cmd.none, None )
 
-        ( ResetIdleTime _, _ ) ->
+        ResetIdleTime _ ->
             ( { model | idleTime = 0 }, Cmd.none, None )
 
-        ( EncryptLibrary, _ ) ->
+        EncryptLibrary ->
             ( model, createEncryptLibraryCmd model Nothing, None )
 
-        ( TogglePasswordVisibility id, _ ) ->
+        TogglePasswordVisibility id ->
             let
                 updatePassword password =
                     if password.id == id then
@@ -177,64 +177,64 @@ update msg model =
             in
                 ( { model | passwords = List.map updatePassword model.passwords }, Cmd.none, None )
 
-        ( CopyPasswordToClipboard elementId, _ ) ->
+        CopyPasswordToClipboard elementId ->
             ( model, Ports.copyPasswordToClipboard elementId, None )
 
-        ( UpdateFilter newFilter, _ ) ->
+        UpdateFilter newFilter ->
             ( { model | filter = newFilter, idleTime = 0 }, Cmd.none, None )
 
-        ( SetNotification json, _ ) ->
+        SetNotification json ->
             let
                 notification =
                     Notification.decodeFromJson json
             in
                 ( { model | notification = notification }, Cmd.none, None )
 
-        ( ClearNotification, _ ) ->
+        ClearNotification ->
             ( { model | notification = Nothing }, Cmd.none, None )
 
-        ( Logout, _ ) ->
+        Logout ->
             ( model, Cmd.none, Quit )
 
-        ( OpenNewMasterKeyModal, _ ) ->
+        OpenNewMasterKeyModal ->
             ( { model | modal = (NewMasterKeyModal NewMasterKey.init) }
             , Cmd.none
             , None
             )
 
-        ( NewMasterKeyMsg subMsg, NewMasterKeyModal modal ) ->
-            let
-                ( modalModel, modalCmd, supervisorCmd ) =
-                    NewMasterKey.update subMsg modal
+        NewMasterKeyMsg subMsg ->
+            case model.modal of
+                NewMasterKeyModal modal ->
+                    let
+                        ( modalModel, modalCmd, supervisorCmd ) =
+                            NewMasterKey.update subMsg modal
 
-                ( newModel, newCmd, notification ) =
-                    case supervisorCmd of
-                        NewMasterKey.None ->
-                            ( NewMasterKeyModal modalModel, Cmd.map NewMasterKeyMsg modalCmd, Nothing )
+                        ( newModel, newCmd, notification ) =
+                            case supervisorCmd of
+                                NewMasterKey.None ->
+                                    ( NewMasterKeyModal modalModel, Cmd.map NewMasterKeyMsg modalCmd, Nothing )
 
-                        NewMasterKey.Quit ->
-                            ( NoModal, Cmd.none, Nothing )
+                                NewMasterKey.Quit ->
+                                    ( NoModal, Cmd.none, Nothing )
 
-                        NewMasterKey.SetNotification level message ->
-                            ( NewMasterKeyModal modalModel, Cmd.map NewMasterKeyMsg modalCmd, Just <| Notification.init level message )
+                                NewMasterKey.SetNotification level message ->
+                                    ( NewMasterKeyModal modalModel, Cmd.map NewMasterKeyMsg modalCmd, Just <| Notification.init level message )
 
-                        NewMasterKey.SaveNewMasterKey maybeNewMasterKey ->
-                            ( NoModal, createEncryptLibraryCmd model maybeNewMasterKey, Nothing )
+                                NewMasterKey.SaveNewMasterKey maybeNewMasterKey ->
+                                    ( NoModal, createEncryptLibraryCmd model maybeNewMasterKey, Nothing )
 
-                -- Temp cheat to no erase an existing notification with nothing
-                newNotification =
-                    case notification of
-                        Just _ ->
-                            notification
+                        -- Temp cheat to no erase an existing notification with nothing
+                        newNotification =
+                            case notification of
+                                Just _ ->
+                                    notification
 
-                        _ ->
-                            model.notification
-            in
-                ( { model | modal = newModel, notification = newNotification }, newCmd, None )
-
-        -- bips for wrong message in current state
-        ( _, _ ) ->
-            ( model, Cmd.none, None )
+                                _ ->
+                                    model.notification
+                    in
+                        ( { model | modal = newModel, notification = newNotification }, newCmd, None )
+                _ ->
+                    ( model, Cmd.none, None )
 
 
 view : Model -> Html Msg
