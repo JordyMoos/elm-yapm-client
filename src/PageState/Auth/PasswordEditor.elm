@@ -5,6 +5,7 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Dict exposing (Dict)
 import Views.Modal exposing (..)
+import Data.Password as Password
 
 
 type alias Model =
@@ -27,10 +28,7 @@ type SupervisorCmd
     = None
     | Quit
     | SetNotification String String
-
-
-
--- | SavePassword (Maybe String)
+    | SavePassword Password.Password
 
 
 init : Model
@@ -65,7 +63,7 @@ update msg model =
 
         Submit ->
             if isFormValid model.fields then
-                ( model, Cmd.none, None )
+                ( model, Cmd.none, SavePassword <| Password.fromDict model.fields )
             else
                 ( model, Cmd.none, SetNotification "error" "Password form is not valid" )
 

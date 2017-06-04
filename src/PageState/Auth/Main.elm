@@ -254,27 +254,46 @@ update msg model =
                         ( modalModel, modalCmd, supervisorCmd ) =
                             PasswordEditor.update subMsg modal
 
-                        ( newModel, newCmd, notification ) =
+                        ( newModel, newCmd ) =
                             case supervisorCmd of
                                 PasswordEditor.None ->
-                                    ( PasswordEditorModal modalModel, Cmd.map PasswordEditorMsg modalCmd, Nothing )
+                                    ( { model | modal = PasswordEditorModal modalModel }
+                                    , Cmd.map PasswordEditorMsg modalCmd
+                                    )
 
                                 PasswordEditor.Quit ->
-                                    ( NoModal, Cmd.none, Nothing )
+                                    ( { model | modal = NoModal }
+                                    , Cmd.none
+                                    )
 
                                 PasswordEditor.SetNotification level message ->
-                                    ( PasswordEditorModal modalModel, Cmd.map PasswordEditorMsg modalCmd, Just <| Notification.init level message )
+                                    ( { model
+                                        | modal = PasswordEditorModal modalModel
+                                        , notification = Just <| Notification.init level message
+                                      }
+                                    , Cmd.map PasswordEditorMsg modalCmd
+                                    )
 
-                        -- Temp cheat to no erase an existing notification with nothing
-                        newNotification =
-                            case notification of
-                                Just _ ->
-                                    notification
+                                PasswordEditor.SavePassword password ->
+                                    let
+                                        nextUid =
+                                            model.uid + 1
 
-                                _ ->
-                                    model.notification
+                                        wrappedPassword =
+                                            WrappedPassword password nextUid False
+
+                                        updatedModel =
+                                            { model
+                                                | modal = NoModal
+                                                , uid = nextUid
+                                                , passwords = (wrappedPassword :: model.passwords)
+                                            }
+                                    in
+                                        ( updatedModel
+                                        , createEncryptLibraryCmd updatedModel Nothing
+                                        )
                     in
-                        ( { model | modal = newModel, notification = newNotification }, newCmd, None )
+                        ( newModel, newCmd, None )
 
                 _ ->
                     ( model, Cmd.none, None )
