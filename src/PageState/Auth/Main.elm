@@ -1,4 +1,4 @@
-module PageState.Auth exposing (..)
+module PageState.Auth.Main exposing (..)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -15,17 +15,19 @@ import Data.EncryptLibraryRequest as EncryptLibraryRequest
 import Data.EncryptLibrarySuccess as EncryptLibrarySuccess
 import Data.User as User
 import Ports
+import PageState.Auth.NewMasterKey as NewMasterKey
 
 
 type alias Model =
     { config : Config
-    , masterKey : MasterKey
+    , masterKey : String
     , library : Library.Library
     , passwords : List WrappedPassword
     , uid : Int
     , filter : String
     , idleTime : Int
     , notification : Maybe Notification.Notification
+    , modal : Modal
     }
 
 
@@ -36,10 +38,6 @@ type alias WrappedPassword =
     }
 
 
-type alias MasterKey =
-    String
-
-
 type alias ElementId =
     String
 
@@ -48,12 +46,17 @@ type alias PasswordId =
     Int
 
 
+type Modal
+    = NoModal
+    | NewMasterKeyModal NewMasterKey.Model
+
+
 type Msg
     = NoOp
     | SetNotification Value
     | ClearNotification
     | UploadLibrary (Maybe EncryptLibrarySuccess.EncryptLibrarySuccess)
-    | UploadLibraryResponse Library.Library MasterKey (Result Http.Error String)
+    | UploadLibraryResponse Library.Library String (Result Http.Error String)
     | IncrementIdleTime Time.Time
     | ResetIdleTime Mouse.Position
     | EncryptLibrary
@@ -61,6 +64,8 @@ type Msg
     | CopyPasswordToClipboard ElementId
     | UpdateFilter String
     | Logout
+    | OpenNewMasterKeyModal
+    | NewMasterKeyMsg NewMasterKey.Msg
 
 
 type SupervisorCmd
@@ -92,6 +97,7 @@ init config { library, masterKey, passwords } =
             , filter = ""
             , idleTime = 0
             , notification = Nothing
+            , modal = NoModal
             }
     in
         model ! []
@@ -190,6 +196,46 @@ update msg model =
         Logout ->
             ( model, Cmd.none, Quit )
 
+        OpenNewMasterKeyModal ->
+            ( { model | modal = (NewMasterKeyModal NewMasterKey.init) }
+            , Cmd.none
+            , None
+            )
+
+        NewMasterKeyMsg subMsg ->
+            case model.modal of
+                NewMasterKeyModal modal ->
+                    let
+                        ( modalModel, modalCmd, supervisorCmd ) =
+                            NewMasterKey.update subMsg modal
+
+                        ( newModel, newCmd, notification ) =
+                            case supervisorCmd of
+                                NewMasterKey.None ->
+                                    ( NewMasterKeyModal modalModel, Cmd.map NewMasterKeyMsg modalCmd, Nothing )
+
+                                NewMasterKey.Quit ->
+                                    ( NoModal, Cmd.none, Nothing )
+
+                                NewMasterKey.SetNotification level message ->
+                                    ( NewMasterKeyModal modalModel, Cmd.map NewMasterKeyMsg modalCmd, Just <| Notification.init level message )
+
+                                NewMasterKey.SaveNewMasterKey maybeNewMasterKey ->
+                                    ( NoModal, createEncryptLibraryCmd model maybeNewMasterKey, Nothing )
+
+                        -- Temp cheat to no erase an existing notification with nothing
+                        newNotification =
+                            case notification of
+                                Just _ ->
+                                    notification
+
+                                _ ->
+                                    model.notification
+                    in
+                        ( { model | modal = newModel, notification = newNotification }, newCmd, None )
+                _ ->
+                    ( model, Cmd.none, None )
+
 
 view : Model -> Html Msg
 view model =
@@ -197,7 +243,18 @@ view model =
         [ viewNavBar model
         , viewPasswordTable model
         , viewNotification model.notification
+        , viewModal model.modal
         ]
+
+
+viewModal : Modal -> Html Msg
+viewModal modal =
+    case modal of
+        NoModal ->
+            text ""
+
+        NewMasterKeyModal subModel ->
+            Html.map NewMasterKeyMsg (NewMasterKey.view subModel)
 
 
 viewNotification : Maybe Notification.Notification -> Html Msg
@@ -244,6 +301,7 @@ viewNavBar model =
                     [ i [ class "icon-lock-open" ] []
                     , text " Logout"
                     ]
+                , button [ class "btn", onClick OpenNewMasterKeyModal ] [ text "New Master Key" ]
                 ]
             ]
         ]
@@ -312,7 +370,7 @@ getPasswordVisibility isVisible =
         "obscured"
 
 
-uploadLibraryCmd : String -> EncryptLibrarySuccess.EncryptLibrarySuccess -> Library.Library -> MasterKey -> Cmd Msg
+uploadLibraryCmd : String -> EncryptLibrarySuccess.EncryptLibrarySuccess -> Library.Library -> String -> Cmd Msg
 uploadLibraryCmd apiEndPoint uploadLibraryRequest oldLibrary oldMasterKey =
     Http.request
         { method = "POST"
@@ -345,7 +403,7 @@ uploadLibraryBody { oldHash, newHash, library } =
         Http.stringBody "application/x-www-form-urlencoded" params
 
 
-createEncryptLibraryCmd : Model -> Maybe MasterKey -> Cmd Msg
+createEncryptLibraryCmd : Model -> Maybe String -> Cmd Msg
 createEncryptLibraryCmd model newMasterKey =
     let
         unwrapPasswords : List WrappedPassword -> List Password.Password
