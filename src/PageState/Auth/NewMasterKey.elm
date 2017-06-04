@@ -18,7 +18,7 @@ type alias Fields =
 
 
 type State
-    = NewMasterKeyForm
+    = NewForm
     | ConfirmationForm
 
 
@@ -39,7 +39,7 @@ type SupervisorCmd
 
 init : Model
 init =
-    Model NewMasterKeyForm initFields
+    Model NewForm initFields
 
 
 initFields : Fields
@@ -64,7 +64,7 @@ update msg model =
                 ( { model | fields = newFields }, Cmd.none, None )
 
         Submit ->
-            if isNewMasterKeyFormValid model.fields then
+            if isNewFormValid model.fields then
                 ( { model | state = ConfirmationForm }, Cmd.none, None )
             else
                 ( model, Cmd.none, SetNotification "error" "Master key form is not valid" )
@@ -79,7 +79,7 @@ update msg model =
 view : Model -> Html Msg
 view model =
     case model.state of
-        NewMasterKeyForm ->
+        NewForm ->
             viewFormModal model
 
         ConfirmationForm ->
@@ -93,7 +93,7 @@ viewFormModal model =
             Close
             NoOp
             [ viewModalHeader Close "New Master Key"
-            , viewNewMasterKeyForm model
+            , viewNewForm model
             , div [ class "modal-footer" ]
                 [ a
                     [ class "btn btn-primary"
@@ -128,48 +128,21 @@ viewConfirmationModal model =
         ]
 
 
-viewNewMasterKeyForm : Model -> Html Msg
-viewNewMasterKeyForm model =
+viewNewForm : Model -> Html Msg
+viewNewForm model =
     Html.form [ class "modal-body form-horizontal" ]
-        [ viewFormInput "masterKey" model.fields "New Master Key" "password"
-        , viewFormInput "masterKeyRepeat" model.fields "Master Key Repeat" "password"
+        [ viewFormInput "masterKey" model.fields "New Master Key" "password" FieldInput
+        , viewFormInput "masterKeyRepeat" model.fields "Master Key Repeat" "password" FieldInput
         ]
 
 
-viewFormInput : String -> Dict String String -> String -> String -> Html Msg
-viewFormInput dictName fields title inputType =
+isNewFormValid : Fields -> Bool
+isNewFormValid fields =
     let
-        maybeFieldValue =
-            Dict.get dictName fields
-    in
-        case maybeFieldValue of
-            Just fieldValue ->
-                div
-                    [ class "form-group" ]
-                    [ label
-                        [ class "col-sm-4 control-label", for dictName ]
-                        [ text title ]
-                    , div
-                        [ class "col-sm-8" ]
-                        [ input
-                            [ attribute "type" inputType
-                            , value fieldValue
-                            , onInput (FieldInput dictName)
-                            , class "form-control"
-                            , id dictName
-                            ]
-                            []
-                        ]
-                    ]
+        key =
+            Dict.get "masterKey" fields
 
-            Nothing ->
-                text ""
-
-
-isNewMasterKeyFormValid : Fields -> Bool
-isNewMasterKeyFormValid fields =
-    let
-        key = Dict.get "masterKey" fields
-        repeat = Dict.get "masterKeyRepeat" fields
+        repeat =
+            Dict.get "masterKeyRepeat" fields
     in
         Maybe.withDefault 0 (Maybe.map String.length key) >= 3 && key == repeat

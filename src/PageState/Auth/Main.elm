@@ -16,6 +16,7 @@ import Data.EncryptLibrarySuccess as EncryptLibrarySuccess
 import Data.User as User
 import Ports
 import PageState.Auth.NewMasterKey as NewMasterKey
+import PageState.Auth.PasswordEditor as PasswordEditor
 
 
 type alias Model =
@@ -49,6 +50,7 @@ type alias PasswordId =
 type Modal
     = NoModal
     | NewMasterKeyModal NewMasterKey.Model
+    | PasswordEditorModal PasswordEditor.Model
 
 
 type Msg
@@ -66,6 +68,8 @@ type Msg
     | Logout
     | OpenNewMasterKeyModal
     | NewMasterKeyMsg NewMasterKey.Msg
+    | OpenPasswordEditorModal
+    | PasswordEditorMsg PasswordEditor.Msg
 
 
 type SupervisorCmd
@@ -233,6 +237,45 @@ update msg model =
                                     model.notification
                     in
                         ( { model | modal = newModel, notification = newNotification }, newCmd, None )
+
+                _ ->
+                    ( model, Cmd.none, None )
+
+        OpenPasswordEditorModal ->
+            ( { model | modal = (PasswordEditorModal PasswordEditor.init) }
+            , Cmd.none
+            , None
+            )
+
+        PasswordEditorMsg subMsg ->
+            case model.modal of
+                PasswordEditorModal modal ->
+                    let
+                        ( modalModel, modalCmd, supervisorCmd ) =
+                            PasswordEditor.update subMsg modal
+
+                        ( newModel, newCmd, notification ) =
+                            case supervisorCmd of
+                                PasswordEditor.None ->
+                                    ( PasswordEditorModal modalModel, Cmd.map PasswordEditorMsg modalCmd, Nothing )
+
+                                PasswordEditor.Quit ->
+                                    ( NoModal, Cmd.none, Nothing )
+
+                                PasswordEditor.SetNotification level message ->
+                                    ( PasswordEditorModal modalModel, Cmd.map PasswordEditorMsg modalCmd, Just <| Notification.init level message )
+
+                        -- Temp cheat to no erase an existing notification with nothing
+                        newNotification =
+                            case notification of
+                                Just _ ->
+                                    notification
+
+                                _ ->
+                                    model.notification
+                    in
+                        ( { model | modal = newModel, notification = newNotification }, newCmd, None )
+
                 _ ->
                     ( model, Cmd.none, None )
 
@@ -255,6 +298,9 @@ viewModal modal =
 
         NewMasterKeyModal subModel ->
             Html.map NewMasterKeyMsg (NewMasterKey.view subModel)
+
+        PasswordEditorModal subModel ->
+            Html.map PasswordEditorMsg (PasswordEditor.view subModel)
 
 
 viewNotification : Maybe Notification.Notification -> Html Msg
@@ -293,15 +339,14 @@ viewNavBar model =
                         []
                     ]
                 , text " "
-                , button [ class "save btn", onClick EncryptLibrary ]
-                    [ i [ class "icon-floppy" ] []
-                    , text " Save"
+                , button [ class "newPassword btn", onClick OpenPasswordEditorModal ]
+                    [ i [ class "icon-plus" ] []
+                    , text " New Password"
                     ]
-                , button [ class "logout btn", onClick Logout ]
-                    [ i [ class "icon-lock-open" ] []
-                    , text " Logout"
+                , button [ class "newMasterKey btn", onClick OpenNewMasterKeyModal ]
+                    [ i [ class "icon-wrench" ] []
+                    , text " New Master Key"
                     ]
-                , button [ class "btn", onClick OpenNewMasterKeyModal ] [ text "New Master Key" ]
                 ]
             ]
         ]
