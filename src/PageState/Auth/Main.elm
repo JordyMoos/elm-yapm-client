@@ -17,6 +17,8 @@ import Data.User as User
 import Ports
 import PageState.Auth.NewMasterKey as NewMasterKey
 import PageState.Auth.PasswordEditor as PasswordEditor
+import PageState.Auth.DeletePassword as DeletePassword
+import List.Extra
 
 
 type alias Model =
@@ -51,6 +53,7 @@ type Modal
     = NoModal
     | NewMasterKeyModal NewMasterKey.Model
     | PasswordEditorModal PasswordEditor.Model
+    | DeletePasswordModal DeletePassword.Model
 
 
 type Msg
@@ -70,6 +73,8 @@ type Msg
     | NewMasterKeyMsg NewMasterKey.Msg
     | OpenPasswordEditorModal
     | PasswordEditorMsg PasswordEditor.Msg
+    | OpenDeletePasswordModal PasswordId
+    | DeletePasswordMsg DeletePassword.Msg
 
 
 type SupervisorCmd
@@ -298,6 +303,60 @@ update msg model =
                 _ ->
                     ( model, Cmd.none, None )
 
+        OpenDeletePasswordModal id ->
+            let
+                maybePassword =
+                    List.Extra.find (\password -> password.id == id) model.passwords
+
+                resultModel =
+                    case maybePassword of
+                        Just password ->
+                            { model | modal = (DeletePasswordModal <| DeletePassword.init id password.password) }
+
+                        Nothing ->
+                            model
+            in
+                ( resultModel, Cmd.none, None )
+
+        DeletePasswordMsg subMsg ->
+            case model.modal of
+                DeletePasswordModal modal ->
+                    let
+                        ( modalModel, modalCmd, supervisorCmd ) =
+                            DeletePassword.update subMsg modal
+
+                        ( newModel, newCmd ) =
+                            case supervisorCmd of
+                                DeletePassword.None ->
+                                    ( { model | modal = DeletePasswordModal modalModel }
+                                    , Cmd.map DeletePasswordMsg modalCmd
+                                    )
+
+                                DeletePassword.Quit ->
+                                    ( { model | modal = NoModal }
+                                    , Cmd.none
+                                    )
+
+                                DeletePassword.DeletePassword id ->
+                                    let
+                                        wrappedPasswords =
+                                            List.Extra.filterNot (\password -> password.id == id) model.passwords
+
+                                        updatedModel =
+                                            { model
+                                                | modal = NoModal
+                                                , passwords = wrappedPasswords
+                                            }
+                                    in
+                                        ( updatedModel
+                                        , createEncryptLibraryCmd updatedModel Nothing
+                                        )
+                    in
+                        ( newModel, newCmd, None )
+
+                _ ->
+                    ( model, Cmd.none, None )
+
 
 view : Model -> Html Msg
 view model =
@@ -320,6 +379,9 @@ viewModal modal =
 
         PasswordEditorModal subModel ->
             Html.map PasswordEditorMsg (PasswordEditor.view subModel)
+
+        DeletePasswordModal subModel ->
+            Html.map DeletePasswordMsg (DeletePassword.view subModel)
 
 
 viewNotification : Maybe Notification.Notification -> Html Msg
@@ -413,6 +475,8 @@ viewPassword { password, id, isVisible } =
                 [ i [ class "icon-eye" ] [] ]
             , a [ class "editPassword" ]
                 [ i [ class "icon-edit" ] [] ]
+            , a [ class "deletePassword", onClick (OpenDeletePasswordModal id) ]
+                [ i [ class "icon-trash" ] [] ]
             ]
         ]
 
