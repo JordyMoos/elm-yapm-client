@@ -5,6 +5,7 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Dict exposing (Dict)
 import Views.Modal exposing (..)
+import Util
 
 
 type alias Model =
@@ -64,7 +65,7 @@ update msg model =
                 ( { model | fields = newFields }, Cmd.none, None )
 
         Submit ->
-            if isNewFormValid model.fields then
+            if Util.isValidPassword model.fields "masterKey" "masterKeyRepeat" then
                 ( { model | state = ConfirmationForm }, Cmd.none, None )
             else
                 ( model, Cmd.none, SetNotification "error" "Master key form is not valid" )
@@ -134,15 +135,3 @@ viewNewForm model =
         [ viewFormInput "masterKey" model.fields "New Master Key" "password" FieldInput
         , viewFormInput "masterKeyRepeat" model.fields "Master Key Repeat" "password" FieldInput
         ]
-
-
-isNewFormValid : Fields -> Bool
-isNewFormValid fields =
-    let
-        key =
-            Dict.get "masterKey" fields
-
-        repeat =
-            Dict.get "masterKeyRepeat" fields
-    in
-        Maybe.withDefault 0 (Maybe.map String.length key) >= 3 && key == repeat

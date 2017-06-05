@@ -6,6 +6,7 @@ import Html.Events exposing (..)
 import Dict exposing (Dict)
 import Views.Modal exposing (..)
 import Data.Password as Password
+import Util
 
 
 type alias Model =
@@ -62,7 +63,7 @@ update msg model =
                 ( { model | fields = newFields }, Cmd.none, None )
 
         Submit ->
-            if isFormValid model.fields then
+            if Util.isValidPassword model.fields "password" "passwordRepeat" then
                 ( model, Cmd.none, SavePassword <| Password.fromDict model.fields )
             else
                 ( model, Cmd.none, SetNotification "error" "Password form is not valid" )
@@ -102,15 +103,3 @@ viewForm model =
         , viewFormInput "passwordRepeat" model.fields "Password Repeat" "password" FieldInput
         , viewFormInput "comment" model.fields "Comment" "text" FieldInput
         ]
-
-
-isFormValid : Fields -> Bool
-isFormValid fields =
-    let
-        key =
-            Dict.get "password" fields
-
-        repeat =
-            Dict.get "passwordRepeat" fields
-    in
-        Maybe.withDefault 0 (Maybe.map String.length key) >= 3 && key == repeat
