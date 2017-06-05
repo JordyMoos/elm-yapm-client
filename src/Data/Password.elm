@@ -3,8 +3,9 @@ module Data.Password exposing (..)
 import Json.Decode as Decode exposing (Decoder)
 import Json.Decode.Pipeline as Pipeline exposing (decode, required)
 import Json.Encode as Encode exposing (Value)
-import Util exposing ((=>))
+import Util exposing ((=>), dictGetWithDefault)
 import List
+import Dict exposing (Dict)
 
 
 type alias Password =
@@ -40,3 +41,27 @@ encode password =
         , "url" => Encode.string password.url
         , "username" => Encode.string password.username
         ]
+
+
+fromDict : Dict String String -> Password
+fromDict dict =
+    let
+        dictUnpacker =
+            dictGetWithDefault dict ""
+
+        comment =
+            dictUnpacker "comment"
+
+        password =
+            dictUnpacker "password"
+
+        title =
+            dictUnpacker "title"
+
+        url =
+            dictUnpacker "url"
+
+        username =
+            dictUnpacker "username"
+    in
+        Password comment password title url username
