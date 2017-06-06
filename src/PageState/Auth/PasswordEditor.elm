@@ -121,30 +121,39 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    div []
-        [ viewModalContainer
-            Close
-            NoOp
-            [ viewModalHeader Close "New Password"
-            , viewForm model
-            , div [ class "modal-footer" ]
-                [ a
-                    [ class "btn btn-default"
-                    , onClick GetRandomPassword
-                    ]
-                    [ i [ class "icon-shuffle" ] []
-                    , text "Random Password"
-                    ]
-                , a
-                    [ class "btn btn-primary"
-                    , onClick Submit
-                    ]
-                    [ i [ class "icon-attention" ] []
-                    , text "Save"
+    let
+        title =
+            case model.passwordId of
+                Just _ ->
+                    "Edit Password"
+
+                Nothing ->
+                    "New Password"
+    in
+        div []
+            [ viewModalContainer
+                Close
+                NoOp
+                [ viewModalHeader Close title
+                , viewForm model
+                , div [ class "modal-footer" ]
+                    [ a
+                        [ class "btn btn-default"
+                        , onClick GetRandomPassword
+                        ]
+                        [ i [ class "icon-shuffle" ] []
+                        , text "Random Password"
+                        ]
+                    , a
+                        [ class "btn btn-primary"
+                        , onClick Submit
+                        ]
+                        [ i [ class "icon-attention" ] []
+                        , text "Save"
+                        ]
                     ]
                 ]
             ]
-        ]
 
 
 viewForm : Model -> Html Msg
