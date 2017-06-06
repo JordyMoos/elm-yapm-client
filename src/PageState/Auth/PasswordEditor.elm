@@ -9,6 +9,7 @@ import Random
 import Random.Char
 import Random.String
 import Random.Extra
+import Maybe.Extra
 import Util
 import Views.Modal exposing (..)
 
@@ -123,12 +124,10 @@ view : Model -> Html Msg
 view model =
     let
         title =
-            case model.passwordId of
-                Just _ ->
-                    "Edit Password"
-
-                Nothing ->
-                    "New Password"
+            if Maybe.Extra.isJust model.passwordId then
+                "Edit Password"
+            else
+                "New Password"
     in
         div []
             [ viewModalContainer
