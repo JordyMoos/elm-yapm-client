@@ -20,6 +20,7 @@ randomPasswordSize =
 
 type alias Model =
     { fields : Fields
+    , passwordId : Maybe Int
     }
 
 
@@ -40,12 +41,29 @@ type SupervisorCmd
     = None
     | Quit
     | SetNotification String String
-    | SavePassword Password.Password
+    | SavePassword Int Password.Password
+    | AddPassword Password.Password
 
 
-init : Model
-init =
-    Model initFields
+initNew : Model
+initNew =
+    Model initFields Nothing
+
+
+initEdit : Int -> Password.Password -> Model
+initEdit passwordId password =
+    let
+        fields =
+            Dict.fromList
+                [ ( "title", password.title )
+                , ( "url", password.url )
+                , ( "username", password.username )
+                , ( "password", password.password )
+                , ( "passwordRepeat", password.password )
+                , ( "comment", password.comment )
+                ]
+    in
+        Model fields (Just passwordId)
 
 
 initFields : Fields
@@ -88,7 +106,12 @@ update msg model =
 
         Submit ->
             if Util.isValidPassword model.fields "password" "passwordRepeat" then
-                ( model, Cmd.none, SavePassword <| Password.fromDict model.fields )
+                case model.passwordId of
+                    Just passwordId ->
+                        ( model, Cmd.none, SavePassword passwordId (Password.fromDict model.fields) )
+
+                    Nothing ->
+                        ( model, Cmd.none, AddPassword (Password.fromDict model.fields) )
             else
                 ( model, Cmd.none, SetNotification "error" "Password form is not valid" )
 

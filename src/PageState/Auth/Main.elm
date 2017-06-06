@@ -71,7 +71,8 @@ type Msg
     | Logout
     | OpenNewMasterKeyModal
     | NewMasterKeyMsg NewMasterKey.Msg
-    | OpenPasswordEditorModal
+    | OpenNewPasswordModal
+    | OpenEditPasswordModal PasswordId
     | PasswordEditorMsg PasswordEditor.Msg
     | OpenDeletePasswordModal PasswordId
     | DeletePasswordMsg DeletePassword.Msg
@@ -246,11 +247,26 @@ update msg model =
                 _ ->
                     ( model, Cmd.none, None )
 
-        OpenPasswordEditorModal ->
-            ( { model | modal = (PasswordEditorModal PasswordEditor.init) }
+        OpenNewPasswordModal ->
+            ( { model | modal = (PasswordEditorModal PasswordEditor.initNew) }
             , Cmd.none
             , None
             )
+
+        OpenEditPasswordModal passwordId ->
+            let
+                maybePassword =
+                    List.Extra.find (\password -> password.id == id) model.passwords
+
+                resultModel =
+                    case maybePassword of
+                        Just password ->
+                            { model | modal = (PasswordEditorModal PasswordEditor.initEdit passwordId password) }
+
+                        Nothing ->
+                            model
+            in
+                ( model, Cmd.none, None )
 
         PasswordEditorMsg subMsg ->
             case model.modal of
@@ -279,7 +295,7 @@ update msg model =
                                     , Cmd.map PasswordEditorMsg modalCmd
                                     )
 
-                                PasswordEditor.SavePassword password ->
+                                PasswordEditor.AddPassword password ->
                                     let
                                         nextUid =
                                             model.uid + 1
@@ -295,6 +311,29 @@ update msg model =
                                             }
                                     in
                                         ( updatedModel
+                                        , createEncryptLibraryCmd updatedModel Nothing
+                                        )
+
+                                PasswordEditor.SavePassword passwordId password ->
+                                    let
+                                        case maybeId of
+                                            Just passwordId ->
+
+                                            Nothing ->
+                                                nextUid =
+                                                    model.uid + 1
+
+                                                wrappedPassword =
+                                                    WrappedPassword password nextUid False
+
+                                                updatedModel =
+                                                    { model
+                                                        | modal = NoModal
+                                                        , uid = nextUid
+                                                        , passwords = (wrappedPassword :: model.passwords)
+                                                    }
+                                    in
+                                        ( finalmodel
                                         , createEncryptLibraryCmd updatedModel Nothing
                                         )
                     in
