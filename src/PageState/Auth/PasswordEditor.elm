@@ -1,12 +1,21 @@
 module PageState.Auth.PasswordEditor exposing (..)
 
+import Data.Password as Password
+import Dict exposing (Dict)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Dict exposing (Dict)
-import Views.Modal exposing (..)
-import Data.Password as Password
+import Random
+import Random.Char
+import Random.String
+import Random.Extra
 import Util
+import Views.Modal exposing (..)
+
+
+randomPasswordSize : Int
+randomPasswordSize =
+    16
 
 
 type alias Model =
@@ -23,6 +32,8 @@ type Msg
     | FieldInput String String
     | Submit
     | Close
+    | GetRandomPassword
+    | RandomPassword String
 
 
 type SupervisorCmd
@@ -62,6 +73,19 @@ update msg model =
             in
                 ( { model | fields = newFields }, Cmd.none, None )
 
+        GetRandomPassword ->
+            ( model, Random.generate RandomPassword randomPasswordGenerator, None )
+
+        RandomPassword password ->
+            let
+                fields =
+                    Dict.update "password" (Maybe.map (\x -> password)) model.fields
+
+                newFields =
+                    Dict.update "passwordRepeat" (Maybe.map (\x -> password)) fields
+            in
+                ( { model | fields = newFields }, Cmd.none, None )
+
         Submit ->
             if Util.isValidPassword model.fields "password" "passwordRepeat" then
                 ( model, Cmd.none, SavePassword <| Password.fromDict model.fields )
@@ -82,6 +106,13 @@ view model =
             , viewForm model
             , div [ class "modal-footer" ]
                 [ a
+                    [ class "btn btn-default"
+                    , onClick GetRandomPassword
+                    ]
+                    [ i [ class "icon-shuffle" ] []
+                    , text "Random Password"
+                    ]
+                , a
                     [ class "btn btn-primary"
                     , onClick Submit
                     ]
@@ -103,3 +134,16 @@ viewForm model =
         , viewFormInput "passwordRepeat" model.fields "Password Repeat" "password" FieldInput
         , viewFormInput "comment" model.fields "Comment" "text" FieldInput
         ]
+
+
+randomPasswordGenerator : Random.Generator String
+randomPasswordGenerator =
+    Random.Extra.choices
+        [ Random.Char.upperCaseLatin
+        , Random.Char.lowerCaseLatin
+        , Random.Char.char 48 57
+          -- Numbers
+        , Random.Char.char 58 64
+          -- Some special chars
+        ]
+        |> Random.String.string randomPasswordSize
