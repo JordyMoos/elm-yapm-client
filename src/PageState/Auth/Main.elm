@@ -256,17 +256,17 @@ update msg model =
         OpenEditPasswordModal passwordId ->
             let
                 maybePassword =
-                    List.Extra.find (\password -> password.id == id) model.passwords
+                    List.Extra.find (\password -> password.id == passwordId) model.passwords
 
                 resultModel =
                     case maybePassword of
                         Just password ->
-                            { model | modal = (PasswordEditorModal PasswordEditor.initEdit passwordId password) }
+                            { model | modal = (PasswordEditorModal <| PasswordEditor.initEdit passwordId password.password) }
 
                         Nothing ->
                             model
             in
-                ( model, Cmd.none, None )
+                ( resultModel, Cmd.none, None )
 
         PasswordEditorMsg subMsg ->
             case model.modal of
@@ -316,24 +316,22 @@ update msg model =
 
                                 PasswordEditor.SavePassword passwordId password ->
                                     let
-                                        case maybeId of
-                                            Just passwordId ->
+                                        updatedWrappedPassword =
+                                            WrappedPassword password passwordId False
 
-                                            Nothing ->
-                                                nextUid =
-                                                    model.uid + 1
+                                        wrappedPasswords =
+                                            List.Extra.replaceIf
+                                                (\x -> x.id == passwordId)
+                                                updatedWrappedPassword
+                                                model.passwords
 
-                                                wrappedPassword =
-                                                    WrappedPassword password nextUid False
-
-                                                updatedModel =
-                                                    { model
-                                                        | modal = NoModal
-                                                        , uid = nextUid
-                                                        , passwords = (wrappedPassword :: model.passwords)
-                                                    }
+                                        updatedModel =
+                                            { model
+                                                | modal = NoModal
+                                                , passwords = wrappedPasswords
+                                            }
                                     in
-                                        ( finalmodel
+                                        ( updatedModel
                                         , createEncryptLibraryCmd updatedModel Nothing
                                         )
                     in
@@ -459,7 +457,7 @@ viewNavBar model =
                         []
                     ]
                 , text " "
-                , button [ class "newPassword btn", onClick OpenPasswordEditorModal ]
+                , button [ class "newPassword btn", onClick OpenNewPasswordModal ]
                     [ i [ class "icon-plus" ] []
                     , text " New Password"
                     ]
@@ -512,7 +510,7 @@ viewPassword { password, id, isVisible } =
                 [ i [ class "icon-docs" ] [] ]
             , a [ class "toggleVisibility", onClick (TogglePasswordVisibility id) ]
                 [ i [ class "icon-eye" ] [] ]
-            , a [ class "editPassword" ]
+            , a [ class "editPassword", onClick (OpenEditPasswordModal id) ]
                 [ i [ class "icon-edit" ] [] ]
             , a [ class "deletePassword", onClick (OpenDeletePasswordModal id) ]
                 [ i [ class "icon-trash" ] [] ]
