@@ -60,7 +60,7 @@ view model =
                 [ a [ class "btn btn-default", onClick Close ]
                     [ text "No Cancel" ]
                 , a [ class "btn btn-danger", onClick SubmitConfirmation ]
-                    [ text "Yes Create" ]
+                    [ text "Yes Delete" ]
                 ]
             ]
         ]
