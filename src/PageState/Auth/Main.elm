@@ -6,6 +6,8 @@ import Html.Events exposing (..)
 import Time
 import Mouse
 import Http
+import Dom
+import Task
 import Json.Decode as Decode exposing (Value)
 import Data.Config exposing (Config)
 import Data.Password as Password
@@ -19,6 +21,8 @@ import PageState.Auth.NewMasterKey as NewMasterKey
 import PageState.Auth.PasswordEditor as PasswordEditor
 import PageState.Auth.DeletePassword as DeletePassword
 import List.Extra
+import Keyboard exposing (KeyCode)
+import Char exposing (toCode, fromCode)
 
 
 type alias Model =
@@ -31,6 +35,13 @@ type alias Model =
     , idleTime : Int
     , notification : Maybe Notification.Notification
     , modal : Modal
+    , keysPressed : KeysPressed
+    }
+
+
+type alias KeysPressed =
+    { ctrl : Bool
+    , e : Bool
     }
 
 
@@ -58,6 +69,8 @@ type Modal
 
 type Msg
     = NoOp
+    | KeyDown KeyCode
+    | KeyUp KeyCode
     | SetNotification Value
     | ClearNotification
     | UploadLibrary (Maybe EncryptLibrarySuccess.EncryptLibrarySuccess)
@@ -108,6 +121,7 @@ init config { library, masterKey, passwords } =
             , idleTime = 0
             , notification = Nothing
             , modal = NoModal
+            , keysPressed = KeysPressed False False
             }
     in
         model ! []
@@ -121,6 +135,8 @@ subscriptions =
         , Mouse.clicks ResetIdleTime
         , Mouse.moves ResetIdleTime
         , Mouse.downs ResetIdleTime
+        , Keyboard.downs KeyDown
+        , Keyboard.ups KeyUp
         ]
 
 
@@ -134,6 +150,26 @@ update msg model =
     case msg of
         NoOp ->
             ( model, Cmd.none, None )
+
+        KeyDown keyCode ->
+            let
+                keysPressed =
+                    updatePressedKeyState model.keysPressed keyCode True
+
+                cmd =
+                    if keysPressed.e && keysPressed.ctrl then
+                        focusFilter
+                    else
+                        Cmd.none
+            in
+                ( { model | keysPressed = keysPressed }, cmd, None )
+
+        KeyUp keyCode ->
+            let
+                keysPressed =
+                    updatePressedKeyState model.keysPressed keyCode False
+            in
+                ( { model | keysPressed = keysPressed }, Cmd.none, None )
 
         UploadLibrary (Just uploadData) ->
             ( { model | library = uploadData.library }
@@ -581,3 +617,22 @@ createEncryptLibraryCmd model newMasterKey =
             (Maybe.withDefault model.masterKey newMasterKey)
             (unwrapPasswords model.passwords)
             |> Ports.encryptLibrary
+
+
+focusFilter : Cmd Msg
+focusFilter =
+    Dom.focus "filter"
+        |> Task.attempt (\_ -> NoOp)
+
+
+updatePressedKeyState : KeysPressed -> KeyCode -> Bool -> KeysPressed
+updatePressedKeyState keysPressed keyCode replaceValue =
+    case keyCode of
+        69 ->
+            { keysPressed | e = replaceValue }
+
+        17 ->
+            { keysPressed | ctrl = replaceValue }
+
+        _ ->
+            keysPressed
