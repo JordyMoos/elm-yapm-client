@@ -33,7 +33,7 @@ module.exports = function(grunt) {
             dist: {
                 files: {
                     'build/js/manager.min.js': ['build/js/manager-es5.js'],
-                    'build/js/elm.min.js': ['build/js/elm.js'],
+                    'build/js/elm.min.js': ['build/js/elm.js']
                 }
             }
         },
@@ -80,6 +80,12 @@ module.exports = function(grunt) {
                         cwd: 'assets/',
                         src: ['**'],
                         dest: 'build/'
+                    },
+                    {
+                        expand: false,
+                        cwd: './',
+                        src: ['node_modules/clipboard/dist/clipboard.min.js'],
+                        dest: 'build/js/clipboard.min.js'
                     }
                 ]
             }

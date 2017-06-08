@@ -536,28 +536,33 @@ viewPasswords filter passwords =
 
 viewPassword : WrappedPassword -> Html Msg
 viewPassword { password, id, isVisible } =
-    tr [ Html.Attributes.id ("password-" ++ (toString id)) ]
-        [ td [] [ text password.title ]
-        , td [] [ viewObscuredField ("password-username-" ++ (toString id)) password.username isVisible ]
-        , td [] [ viewObscuredField ("password-password-" ++ (toString id)) password.password isVisible ]
-        , td [] [ div [ class "comment" ] [ text password.comment ] ]
-        , td []
-            [ a [ class "copyPassword", onClick (CopyPasswordToClipboard ("password-password-" ++ (toString id))) ]
-                [ i [ class "icon-docs" ] [] ]
-            , a [ class "toggleVisibility", onClick (TogglePasswordVisibility id) ]
-                [ i [ class "icon-eye" ] [] ]
-            , a [ class "editPassword", onClick (OpenEditPasswordModal id) ]
-                [ i [ class "icon-edit" ] [] ]
-            , a [ class "deletePassword", onClick (OpenDeletePasswordModal id) ]
-                [ i [ class "icon-trash" ] [] ]
+    let
+        stringId =
+            toString id
+    in
+        tr [ Html.Attributes.id ("password-" ++ (toString id)) ]
+            [ td [] [ text password.title ]
+            , td [] [ viewObscuredField ("password-username-" ++ stringId) password.username isVisible ]
+            , td [] [ viewObscuredField ("password-password-" ++ stringId) password.password isVisible ]
+            , td [] [ div [ class "comment" ] [ text password.comment ] ]
+            , td []
+                [ a [ class "copyable copyPassword", attribute "data-clipboard-target" ("#password-password-" ++ stringId) ]
+                    [ i [ class "icon-docs" ] [] ]
+                , a [ class "toggleVisibility", onClick (TogglePasswordVisibility id) ]
+                    [ i [ class "icon-eye" ] [] ]
+                , a [ class "editPassword", onClick (OpenEditPasswordModal id) ]
+                    [ i [ class "icon-edit" ] [] ]
+                , a [ class "deletePassword", onClick (OpenDeletePasswordModal id) ]
+                    [ i [ class "icon-trash" ] [] ]
+                ]
             ]
-        ]
 
 
 viewObscuredField : String -> String -> Bool -> Html Msg
 viewObscuredField fieldId message isVisible =
     div
-        [ class (getPasswordVisibility isVisible)
+        [ class ("copyable " ++ (getPasswordVisibility isVisible))
+        , attribute "data-clipboard-target" ("#" ++ fieldId)
         , id fieldId
         ]
         [ text message ]
