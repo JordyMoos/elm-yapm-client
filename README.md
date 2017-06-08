@@ -31,7 +31,7 @@ Run in with php
 Install elm modules
 `elm-package install`
 
-Install grunt stuff
+Install grunt stuff and additional dependencies
 `npm install`
 
 Compile elm and assets with grunt
