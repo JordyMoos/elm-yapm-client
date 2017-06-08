@@ -536,7 +536,7 @@ viewPassword { password, id, isVisible } =
         stringId =
             toString id
     in
-        tr [ Html.Attributes.id ("password-" ++ (toString id)) ]
+        tr [ Html.Attributes.id ("password-" ++ stringId) ]
             [ td [] [ text password.title ]
             , td [] [ viewObscuredField ("password-username-" ++ stringId) password.username isVisible ]
             , td [] [ viewObscuredField ("password-password-" ++ stringId) password.password isVisible ]
