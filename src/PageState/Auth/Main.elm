@@ -79,7 +79,6 @@ type Msg
     | ResetIdleTime Mouse.Position
     | EncryptLibrary
     | TogglePasswordVisibility Int
-    | CopyPasswordToClipboard ElementId
     | UpdateFilter String
     | Logout
     | OpenNewMasterKeyModal
@@ -222,9 +221,6 @@ update msg model =
                         password
             in
                 ( { model | passwords = List.map updatePassword model.passwords }, Cmd.none, None )
-
-        CopyPasswordToClipboard elementId ->
-            ( model, Ports.copyPasswordToClipboard elementId, None )
 
         UpdateFilter newFilter ->
             ( { model | filter = newFilter, idleTime = 0 }, Cmd.none, None )

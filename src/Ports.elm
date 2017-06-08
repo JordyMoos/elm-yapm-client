@@ -12,9 +12,6 @@ port login : LoginRequest.LoginRequest -> Cmd msg
 port encryptLibrary : EncryptLibraryRequest.EncryptLibraryRequest -> Cmd msg
 
 
-port copyPasswordToClipboard : String -> Cmd msg
-
-
 port notification : (Value -> msg) -> Sub msg
 
 
