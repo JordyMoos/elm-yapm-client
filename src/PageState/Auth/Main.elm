@@ -542,7 +542,7 @@ viewPassword { password, id, isVisible } =
             , td [] [ viewObscuredField ("password-password-" ++ stringId) password.password isVisible ]
             , td [] [ div [ class "comment" ] [ text password.comment ] ]
             , td []
-                [ a [ class "copyable copyPassword", attribute "data-clipboard-target" ("#password-password-" ++ stringId) ]
+                [ a [ class "copyable copyPassword", attribute "data-clipboard-text" password.password ]
                     [ i [ class "icon-docs" ] [] ]
                 , a [ class "toggleVisibility", onClick (TogglePasswordVisibility id) ]
                     [ i [ class "icon-eye" ] [] ]
@@ -558,7 +558,7 @@ viewObscuredField : String -> String -> Bool -> Html Msg
 viewObscuredField fieldId message isVisible =
     div
         [ class ("copyable " ++ (getPasswordVisibility isVisible))
-        , attribute "data-clipboard-target" ("#" ++ fieldId)
+        , attribute "data-clipboard-text" message
         , id fieldId
         ]
         [ text message ]
