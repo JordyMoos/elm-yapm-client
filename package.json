@@ -19,5 +19,8 @@
     "grunt-inline-alt": "^0.3.4",
     "grunt-manifest": "^0.4.0",
     "grunt-processhtml": "^0.3.7"
+  },
+  "dependencies": {
+    "clipboard": "^1.7.1"
   }
 }
