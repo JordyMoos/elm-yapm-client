@@ -129,27 +129,25 @@ view model =
             else
                 "New Password"
     in
-        div []
-            [ viewModalContainer
-                Close
-                NoOp
-                [ viewModalHeader Close title
-                , viewForm model
-                , div [ class "modal-footer" ]
-                    [ a
-                        [ class "btn btn-default"
-                        , onClick GetRandomPassword
-                        ]
-                        [ i [ class "icon-shuffle" ] []
-                        , text "Random Password"
-                        ]
-                    , a
-                        [ class "btn btn-primary"
-                        , onClick Submit
-                        ]
-                        [ i [ class "icon-attention" ] []
-                        , text "Save"
-                        ]
+        viewModalContainer
+            Close
+            NoOp
+            [ viewModalHeader Close title
+            , viewForm model
+            , div []
+                [ button
+                    [ class "btn-default"
+                    , onClick GetRandomPassword
+                    ]
+                    [ i [ class "icon-shuffle" ] []
+                    , text "Random Password"
+                    ]
+                , button
+                    [ class "btn-primary"
+                    , onClick Submit
+                    ]
+                    [ i [ class "icon-floppy" ] []
+                    , text "Save"
                     ]
                 ]
             ]
@@ -157,7 +155,7 @@ view model =
 
 viewForm : Model -> Html Msg
 viewForm model =
-    Html.form [ class "modal-body form-horizontal" ]
+    Html.form []
         [ viewFormInput "title" model.fields "Title" "text" FieldInput
         , viewFormInput "url" model.fields "URL" "text" FieldInput
         , viewFormInput "username" model.fields "Username" "text" FieldInput

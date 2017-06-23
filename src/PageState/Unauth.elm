@@ -135,33 +135,29 @@ view model =
             [ id "welcome" ]
             [ h1 [] [ text "Online Password Manager" ]
             , viewLoginForm model
+            , viewNotification model.notification
             ]
         ]
 
 
 viewLoginForm : Model -> Html Msg
 viewLoginForm model =
-    div
-        []
-        [ Html.form
-            [ onSubmit SubmitAuthForm, class "well form-inline", id "decrypt" ]
-            [ input
-                [ placeholder "master key"
-                , onInput SetMasterKeyInput
-                , value model.masterKeyInput
-                , class "form-control"
-                , id "encryptionKey"
-                , autocomplete False
-                , attribute "type" "password"
-                ]
-                []
-            , button
-                [ class "btn" ]
-                [ i [ class "icon-lock-open" ] []
-                , text " Decrypt"
-                ]
+    Html.form
+        [ onSubmit SubmitAuthForm, id "decrypt" ]
+        [ input
+            [ placeholder "master key"
+            , onInput SetMasterKeyInput
+            , value model.masterKeyInput
+            , id "encryptionKey"
+            , autocomplete False
+            , attribute "type" "password"
             ]
-        , viewNotification model.notification
+            []
+        , button
+            [ class "btn" ]
+            [ i [ class "icon-lock-open" ] []
+            , text " Decrypt"
+            ]
         ]
 
 

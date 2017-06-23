@@ -47,20 +47,18 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    div []
-        [ viewModalContainer
-            Close
-            NoOp
-            [ viewModalHeader Close "Delete password confirmation"
-            , div [ class "modal-body" ]
-                [ p []
-                    [ text <| "Are you sure you want to delete the password with the title \"" ++ model.password.title ++ "\"?" ]
-                ]
-            , div [ class "modal-footer" ]
-                [ a [ class "btn btn-default", onClick Close ]
-                    [ text "No Cancel" ]
-                , a [ class "btn btn-danger", onClick SubmitConfirmation ]
-                    [ text "Yes Delete" ]
-                ]
+    viewModalContainer
+        Close
+        NoOp
+        [ viewModalHeader Close "Delete password confirmation"
+        , div []
+            [ p []
+                [ text <| "Are you sure you want to delete the password with the title \"" ++ model.password.title ++ "\"?" ]
+            ]
+        , div []
+            [ button [ class "btn-default", onClick Close ]
+                [ text "Cancel" ]
+            , button [ class "btn-danger", onClick SubmitConfirmation ]
+                [ text "Delete" ]
             ]
         ]

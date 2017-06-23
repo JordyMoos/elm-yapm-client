@@ -472,31 +472,24 @@ viewNotification notification =
 
 viewNavBar : Model -> Html Msg
 viewNavBar model =
-    nav [ class "navbar navbar-default navbar-fixed-top", attribute "role" "navigation" ]
-        [ div [ class "navbar-header" ]
-            [ a [ class "navbar-brand" ]
-                [ text "Passwords" ]
-            ]
-        , div [ class "navbar" ]
-            [ div [ class "navbar-form navbar-right", attribute "role" "form" ]
-                [ div [ class "form-group" ]
-                    [ input
-                        [ id "filter"
-                        , placeholder "Filter... <CTRL+E>"
-                        , class "flter-control"
-                        , onInput UpdateFilter
-                        ]
-                        []
-                    ]
-                , text " "
-                , button [ class "newPassword btn", onClick OpenNewPasswordModal ]
-                    [ i [ class "icon-plus" ] []
-                    , text " New Password"
-                    ]
-                , button [ class "newMasterKey btn", onClick OpenNewMasterKeyModal ]
-                    [ i [ class "icon-wrench" ] []
-                    , text " New Master Key"
-                    ]
+    nav [ attribute "role" "navigation" ]
+        [ h2 [] [ text "Passwords" ]
+        , div [ attribute "role" "form" ]
+            [ input
+                [ id "filter"
+                , placeholder "Filter... <CTRL+E>"
+                , class "flter-control"
+                , onInput UpdateFilter
+                ]
+                []
+            , text " "
+            , button [ class "newPassword btn", onClick OpenNewPasswordModal ]
+                [ i [ class "icon-plus" ] []
+                , text " New Password"
+                ]
+            , button [ class "newMasterKey btn", onClick OpenNewMasterKeyModal ]
+                [ i [ class "icon-wrench" ] []
+                , text " New Master Key"
                 ]
             ]
         ]
@@ -504,20 +497,7 @@ viewNavBar model =
 
 viewPasswordTable : Model -> Html Msg
 viewPasswordTable model =
-    div [ class "wide-container" ]
-        [ table [ class "table table-striped", id "overview" ]
-            [ thead []
-                [ tr []
-                    [ th [] [ text "Title" ]
-                    , th [] [ text "Username" ]
-                    , th [] [ text "Password" ]
-                    , th [] [ text "Comment" ]
-                    , th [] [ text "Actions" ]
-                    ]
-                ]
-            , viewPasswords model.filter model.passwords
-            ]
-        ]
+    ul [ id "overview" ] (viewPasswords model.filter model.passwords)
 
 
 passwordFilter : String -> WrappedPassword -> Bool
@@ -525,9 +505,9 @@ passwordFilter filter password =
     List.all (\subfilter -> String.contains subfilter <| String.toLower password.password.title) <| String.split " " filter
 
 
-viewPasswords : String -> List WrappedPassword -> Html Msg
+viewPasswords : String -> List WrappedPassword -> List (Html Msg)
 viewPasswords filter passwords =
-    tbody [] (List.map viewPassword <| List.filter (passwordFilter <| String.toLower filter) passwords)
+    List.map viewPassword <| List.filter (passwordFilter <| String.toLower filter) passwords
 
 
 viewPassword : WrappedPassword -> Html Msg
@@ -536,12 +516,12 @@ viewPassword { password, id, isVisible } =
         stringId =
             toString id
     in
-        tr [ Html.Attributes.id ("password-" ++ stringId) ]
-            [ td [] [ text password.title ]
-            , td [] [ viewObscuredField ("password-username-" ++ stringId) password.username isVisible ]
-            , td [] [ viewObscuredField ("password-password-" ++ stringId) password.password isVisible ]
-            , td [] [ div [ class "comment" ] [ text password.comment ] ]
-            , td []
+        li [ Html.Attributes.id ("password-" ++ stringId) ]
+            [ h5 [] [ text password.title ]
+            , viewObscuredField ("password-username-" ++ stringId) password.username isVisible
+            , viewObscuredField ("password-password-" ++ stringId) password.password isVisible
+            , span [ class "comment" ] [ text password.comment ]
+            , div [ class "actions" ]
                 [ a [ class "copyable copyPassword", attribute "data-clipboard-text" password.password ]
                     [ i [ class "icon-docs" ] [] ]
                 , a [ class "toggleVisibility", onClick (TogglePasswordVisibility id) ]
@@ -556,7 +536,7 @@ viewPassword { password, id, isVisible } =
 
 viewObscuredField : String -> String -> Bool -> Html Msg
 viewObscuredField fieldId message isVisible =
-    div
+    span
         [ class ("copyable " ++ (getPasswordVisibility isVisible))
         , attribute "data-clipboard-text" message
         , id fieldId
