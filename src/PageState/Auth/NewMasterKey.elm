@@ -89,20 +89,18 @@ view model =
 
 viewFormModal : Model -> Html Msg
 viewFormModal model =
-    div []
-        [ viewModalContainer
-            Close
-            NoOp
-            [ viewModalHeader Close "New Master Key"
-            , viewNewForm model
-            , div [ class "modal-footer" ]
-                [ a
-                    [ class "btn btn-primary"
-                    , onClick Submit
-                    ]
-                    [ i [ class "icon-attention" ] []
-                    , text "Save"
-                    ]
+    viewModalContainer
+        Close
+        NoOp
+        [ viewModalHeader Close "New Master Key"
+        , viewNewForm model
+        , div []
+            [ button
+                [ class "btn-primary"
+                , onClick Submit
+                ]
+                [ i [ class "icon-attention" ] []
+                , text "Save"
                 ]
             ]
         ]
@@ -110,28 +108,26 @@ viewFormModal model =
 
 viewConfirmationModal : Model -> Html Msg
 viewConfirmationModal model =
-    div []
-        [ viewModalContainer
-            Close
-            NoOp
-            [ viewModalHeader Close "New Master Key Confirmation"
-            , div [ class "modal-body" ]
-                [ p []
-                    [ text "Are you sure you want to create a new master key?" ]
-                ]
-            , div [ class "modal-footer" ]
-                [ a [ class "btn btn-default", onClick Close ]
-                    [ text "No Cancel" ]
-                , a [ class "btn btn-danger", onClick SubmitConfirmation ]
-                    [ text "Yes Create" ]
-                ]
+    viewModalContainer
+        Close
+        NoOp
+        [ viewModalHeader Close "New Master Key Confirmation"
+        , div []
+            [ p []
+                [ text "Are you sure you want to create a new master key?" ]
+            ]
+        , div []
+            [ button [ class "btn-default", onClick Close ]
+                [ text "Cancel" ]
+            , button [ class "btn-danger", onClick SubmitConfirmation ]
+                [ text "Change Master Key" ]
             ]
         ]
 
 
 viewNewForm : Model -> Html Msg
 viewNewForm model =
-    Html.form [ class "modal-body form-horizontal" ]
+    Html.form []
         [ viewFormInput "masterKey" model.fields "New Master Key" "password" FieldInput
         , viewFormInput "masterKeyRepeat" model.fields "Master Key Repeat" "password" FieldInput
         ]

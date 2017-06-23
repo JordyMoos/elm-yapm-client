@@ -9,25 +9,20 @@ import Dict exposing (Dict)
 
 viewModalContainer : msg -> msg -> List (Html msg) -> Html msg
 viewModalContainer closeMsg noopMsg html =
-    div
-        ((onSelfClickWithId "modal" closeMsg noopMsg) ++ [ class "modal visible-modal" ])
-        [ div [ class "modal-dialog" ]
-            [ div [ class "modal-content" ]
-                html
-            ]
-        ]
+    div ((onSelfClickWithId "modal" closeMsg noopMsg) ++ [ class "modal-container" ])
+        [ div [ class "modal" ] html ]
 
 
 viewModalHeader : msg -> String -> Html msg
 viewModalHeader closeMsg title =
-    div [ class "modal-header" ]
+    span []
         [ button
             [ class "close"
             , onClick closeMsg
             , attribute "aria-hidden" "true"
             ]
             [ text "x" ]
-        , h4 [ class "modal-title", id "modalHeader" ]
+        , h4 [ id "modalHeader" ]
             [ text title ]
         ]
 
@@ -41,17 +36,16 @@ viewFormInput dictName fields title inputType onInputMsg =
         case maybeFieldValue of
             Just fieldValue ->
                 div
-                    [ class "form-group" ]
+                    []
                     [ label
-                        [ class "col-sm-4 control-label", for dictName ]
+                        [ for dictName ]
                         [ text title ]
                     , div
-                        [ class "col-sm-8" ]
+                        []
                         [ input
                             [ attribute "type" inputType
                             , value fieldValue
                             , onInput (onInputMsg dictName)
-                            , class "form-control"
                             , id dictName
                             ]
                             []
