@@ -21,6 +21,7 @@ import PageState.Auth.NewMasterKey as NewMasterKey
 import PageState.Auth.PasswordEditor as PasswordEditor
 import PageState.Auth.DeletePassword as DeletePassword
 import List.Extra
+import Maybe.Extra
 import Keyboard exposing (KeyCode)
 import Char exposing (toCode, fromCode)
 
@@ -33,7 +34,7 @@ type alias Model =
     , uid : Int
     , filter : String
     , idleTime : Int
-    , notification : Maybe Notification.Notification
+    , notifications : List Notification.Notification
     , modal : Modal
     , keysPressed : KeysPressed
     }
@@ -71,8 +72,8 @@ type Msg
     = NoOp
     | KeyDown KeyCode
     | KeyUp KeyCode
-    | SetNotification Value
-    | ClearNotification
+    | AddNotification Value
+    | NotifyCopy
     | UploadLibrary (Maybe EncryptLibrarySuccess.EncryptLibrarySuccess)
     | UploadLibraryResponse Library.Library String (Result Http.Error String)
     | IncrementIdleTime Time.Time
@@ -118,7 +119,7 @@ init config { library, masterKey, passwords } =
             , uid = lastId
             , filter = ""
             , idleTime = 0
-            , notification = Nothing
+            , notifications = []
             , modal = NoModal
             , keysPressed = KeysPressed False False
             }
@@ -177,7 +178,11 @@ update msg model =
             )
 
         UploadLibrary Nothing ->
-            ( { model | notification = Just <| Notification.initError "Failed to parse the encrypted library" }, Cmd.none, None )
+            let
+                notifications =
+                    (Notification.initError "Failed to parse the encrypted library") :: model.notifications
+            in
+                ( { model | notifications = notifications }, Cmd.none, None )
 
         UploadLibraryResponse _ _ (Ok message) ->
             let
@@ -190,9 +195,11 @@ update msg model =
             let
                 _ =
                     Debug.log "Response error" (toString errorValue)
+                notifications =
+                    (Notification.initError "Upload error.") :: model.notifications
             in
                 ( { model
-                    | notification = Just <| Notification.initError "Upload error"
+                    | notifications = notifications
                     , library = previousLibrary
                     , masterKey = previousMasterKey
                   }
@@ -225,15 +232,20 @@ update msg model =
         UpdateFilter newFilter ->
             ( { model | filter = newFilter, idleTime = 0 }, Cmd.none, None )
 
-        SetNotification json ->
+        AddNotification json ->
             let
-                notification =
-                    Notification.decodeFromJson json
+                notifications =
+                    (Maybe.Extra.maybeToList <| Notification.decodeFromJson json)
+                        ++ model.notifications
             in
-                ( { model | notification = notification }, Cmd.none, None )
+                ( { model | notifications = notifications }, Cmd.none, None )
 
-        ClearNotification ->
-            ( { model | notification = Nothing }, Cmd.none, None )
+        NotifyCopy ->
+            let
+                notifications =
+                    (Notification.init "notice" "Password copied.") :: model.notifications
+            in
+                ( { model | notifications = notifications }, Cmd.none, None )
 
         Logout ->
             ( model, Cmd.none, Quit )
@@ -251,30 +263,24 @@ update msg model =
                         ( modalModel, modalCmd, supervisorCmd ) =
                             NewMasterKey.update subMsg modal
 
-                        ( newModel, newCmd, notification ) =
+                        ( newModel, newCmd, notifications ) =
                             case supervisorCmd of
                                 NewMasterKey.None ->
-                                    ( NewMasterKeyModal modalModel, Cmd.map NewMasterKeyMsg modalCmd, Nothing )
+                                    ( NewMasterKeyModal modalModel, Cmd.map NewMasterKeyMsg modalCmd, [] )
 
                                 NewMasterKey.Quit ->
-                                    ( NoModal, Cmd.none, Nothing )
+                                    ( NoModal, Cmd.none, [] )
 
                                 NewMasterKey.SetNotification level message ->
-                                    ( NewMasterKeyModal modalModel, Cmd.map NewMasterKeyMsg modalCmd, Just <| Notification.init level message )
+                                    ( NewMasterKeyModal modalModel, Cmd.map NewMasterKeyMsg modalCmd, [ Notification.init level message ] )
 
                                 NewMasterKey.SaveNewMasterKey maybeNewMasterKey ->
-                                    ( NoModal, createEncryptLibraryCmd model maybeNewMasterKey, Nothing )
+                                    ( NoModal, createEncryptLibraryCmd model maybeNewMasterKey, [] )
 
-                        -- Temp cheat to no erase an existing notification with nothing
-                        newNotification =
-                            case notification of
-                                Just _ ->
-                                    notification
-
-                                _ ->
-                                    model.notification
+                        newNotifications =
+                            notifications ++ model.notifications
                     in
-                        ( { model | modal = newModel, notification = newNotification }, newCmd, None )
+                        ( { model | modal = newModel, notifications = newNotifications }, newCmd, None )
 
                 _ ->
                     ( model, Cmd.none, None )
@@ -322,7 +328,7 @@ update msg model =
                                 PasswordEditor.SetNotification level message ->
                                     ( { model
                                         | modal = PasswordEditorModal modalModel
-                                        , notification = Just <| Notification.init level message
+                                        , notifications = (Notification.init level message) :: model.notifications
                                       }
                                     , Cmd.map PasswordEditorMsg modalCmd
                                     )
@@ -432,7 +438,7 @@ view model =
     section [ id "authorized" ]
         [ viewNavBar model
         , viewPasswordTable model
-        , viewNotification model.notification
+        , viewNotifications model.notifications
         , viewModal model.modal
         ]
 
@@ -453,21 +459,20 @@ viewModal modal =
             Html.map DeletePasswordMsg (DeletePassword.view subModel)
 
 
-viewNotification : Maybe Notification.Notification -> Html Msg
-viewNotification notification =
-    case notification of
-        Just notificationData ->
-            div []
-                [ text <|
-                    notificationData.level
-                        ++ ": "
-                        ++ notificationData.message
-                        ++ " "
-                , button [ onClick ClearNotification ] [ text "[x]" ]
-                ]
+viewNotifications : List Notification.Notification -> Html Msg
+viewNotifications notifications =
+    div [ id "notificationContainer" ] <| List.map viewNotification notifications
 
-        Nothing ->
-            div [] [ text "[No Notification]" ]
+
+viewNotification : Notification.Notification -> Html Msg
+viewNotification notificationData =
+    div [ class <| "notification " ++ notificationData.level ]
+        [ text <|
+            notificationData.level
+                ++ ": "
+                ++ notificationData.message
+                ++ " "
+        ]
 
 
 viewNavBar : Model -> Html Msg
@@ -478,7 +483,6 @@ viewNavBar model =
             [ input
                 [ id "filter"
                 , placeholder "Filter... <CTRL+E>"
-                , class "flter-control"
                 , onInput UpdateFilter
                 ]
                 []
@@ -518,13 +522,15 @@ viewPassword { password, id, isVisible } =
     in
         li [ Html.Attributes.id ("password-" ++ stringId) ]
             [ div [ class "password-details" ]
-                [ h5 [] [ text password.title ]
+                [ a [ href password.url ] [ text password.title ]
                 , viewObscuredField ("password-username-" ++ stringId) password.username isVisible
                 , viewObscuredField ("password-password-" ++ stringId) password.password isVisible
-                , span [ class "comment" ] [ text password.comment ]
+                , div [ class "comment" ] [ text password.comment ]
                 ]
             , div [ class "actions" ]
-                [ a [ class "copyable copyPassword", attribute "data-clipboard-text" password.password ]
+                [ a [ class "copyable copyPassword"
+                    , attribute "data-clipboard-text" password.password
+                    , onClick NotifyCopy ]
                     [ i [ class "icon-docs" ] [] ]
                 , a [ class "toggleVisibility", onClick (TogglePasswordVisibility id) ]
                     [ i [ class "icon-eye" ] [] ]
