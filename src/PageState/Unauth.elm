@@ -175,7 +175,7 @@ viewNotification notification =
                 ]
 
         Nothing ->
-            div [] [ text "[No Notification]" ]
+            Html.text ""
 
 
 focusMasterKeyInputCmd : Cmd Msg
