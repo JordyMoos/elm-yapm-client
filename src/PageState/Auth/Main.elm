@@ -517,10 +517,12 @@ viewPassword { password, id, isVisible } =
             toString id
     in
         li [ Html.Attributes.id ("password-" ++ stringId) ]
-            [ h5 [] [ text password.title ]
-            , viewObscuredField ("password-username-" ++ stringId) password.username isVisible
-            , viewObscuredField ("password-password-" ++ stringId) password.password isVisible
-            , span [ class "comment" ] [ text password.comment ]
+            [ div [ class "password-details" ]
+                [ h5 [] [ text password.title ]
+                , viewObscuredField ("password-username-" ++ stringId) password.username isVisible
+                , viewObscuredField ("password-password-" ++ stringId) password.password isVisible
+                , span [ class "comment" ] [ text password.comment ]
+                ]
             , div [ class "actions" ]
                 [ a [ class "copyable copyPassword", attribute "data-clipboard-text" password.password ]
                     [ i [ class "icon-docs" ] [] ]
