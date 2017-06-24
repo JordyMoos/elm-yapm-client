@@ -184,12 +184,8 @@ update msg model =
             in
                 ( { model | notifications = notifications }, Cmd.none, None )
 
-        UploadLibraryResponse _ _ (Ok message) ->
-            let
-                _ =
-                    Debug.log "Upload success" message
-            in
-                ( model, Cmd.none, None )
+        UploadLibraryResponse _ _ (Ok _) ->
+            ( model, Cmd.none, None )
 
         UploadLibraryResponse previousLibrary previousMasterKey (Err errorValue) ->
             let
@@ -461,7 +457,9 @@ viewModal modal =
 
 viewNotifications : List Notification.Notification -> Html Msg
 viewNotifications notifications =
-    div [ id "notificationContainer" ] <| List.map viewNotification notifications
+    div [ id "notificationContainer" ]
+        <| List.reverse
+        <| List.map viewNotification notifications
 
 
 viewNotification : Notification.Notification -> Html Msg

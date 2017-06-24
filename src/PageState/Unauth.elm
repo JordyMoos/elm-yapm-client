@@ -18,7 +18,7 @@ import Data.Config exposing (Config)
 
 type alias Model =
     { config : Config
-    , notification : Maybe Notification.Notification
+    , notifications : List Notification.Notification
     , isDownloading : Bool
     , library : Maybe Library.Library
     , masterKeyInput : String
@@ -32,8 +32,8 @@ type Msg
     | NewLibrary (Result Http.Error Library.Library)
     | SetMasterKeyInput String
     | SubmitAuthForm
-    | SetNotification Value
-    | ClearNotification
+    | AddNotification Value
+    | ClearNotification Int
     | SetUser (Maybe User.User)
 
 
@@ -45,7 +45,7 @@ type SupervisorCmd
 init : Config -> ( Model, Cmd Msg )
 init config =
     { config = config
-    , notification = Nothing
+    , notifications = []
     , isDownloading = False
     , library = Nothing
     , masterKeyInput = ""
@@ -57,7 +57,7 @@ init config =
 subscriptions : Sub Msg
 subscriptions =
     Sub.batch
-        [ Ports.notification SetNotification
+        [ Ports.notification AddNotification
         , Sub.map SetUser loginSuccess
         ]
 
@@ -85,10 +85,10 @@ update msg model =
 
         NewLibrary (Err _) ->
             let
-                notification =
-                    Notification.initError "Fetching library failed"
+                notifications =
+                    Notification.initError "Fetching library failed." :: model.notifications
             in
-                ( { model | notification = Just notification }, Cmd.none, None )
+                ( { model | notifications = notifications }, Cmd.none, None )
 
         SetMasterKeyInput masterKeyInput ->
             ( { model | masterKeyInput = masterKeyInput }, Cmd.none, None )
@@ -106,25 +106,31 @@ update msg model =
             in
                 ( newModel, decryptLibraryIfPossibleCmd newModel, None )
 
-        SetNotification json ->
+        AddNotification json ->
             let
-                notification =
-                    Notification.decodeFromJson json
+                notifications =
+                    (Maybe.Extra.maybeToList <| Notification.decodeFromJson json)
+                        ++ model.notifications
             in
-                ( { model | notification = notification }, Cmd.none, None )
+                ( { model | notifications = notifications }, Cmd.none, None )
 
-        ClearNotification ->
-            ( { model | notification = Nothing }, Cmd.none, None )
+        ClearNotification notificationId ->
+            let
+                notifications =
+                    List.take (notificationId - 1) model.notifications
+                        ++ List.drop notificationId model.notifications 
+            in
+                ( { model | notifications = notifications }, Cmd.none, None )
 
         SetUser (Just user) ->
             ( model, Cmd.none, Login user )
 
         SetUser Nothing ->
             let
-                notification =
-                    Notification.initError "Could not parse the login success data"
+                notifications =
+                    Notification.initError "Could not parse the login success data." :: model.notifications
             in
-                ( { model | notification = Just notification }, Cmd.none, None )
+                ( { model | notifications = notifications }, Cmd.none, None )
 
 
 view : Model -> Html Msg
@@ -135,7 +141,7 @@ view model =
             [ id "welcome" ]
             [ h1 [] [ text "Online Password Manager" ]
             , viewLoginForm model
-            , viewNotification model.notification
+            , viewNotifications model.notifications
             ]
         ]
 
@@ -161,21 +167,23 @@ viewLoginForm model =
         ]
 
 
-viewNotification : Maybe Notification.Notification -> Html Msg
-viewNotification notification =
-    case notification of
-        Just notificationData ->
-            div []
-                [ text <|
-                    notificationData.level
-                        ++ ": "
-                        ++ notificationData.message
-                        ++ " "
-                , button [ onClick ClearNotification ] [ text "[x]" ]
-                ]
+viewNotifications : List Notification.Notification -> Html Msg
+viewNotifications notifications =
+    ol [ id "notificationList" ]
+       <| List.map2 viewNotification notifications
+       <| List.range 1 <| List.length notifications
 
-        Nothing ->
-            Html.text ""
+
+viewNotification : Notification.Notification -> Int -> Html Msg
+viewNotification notificationData notificationId =
+    li []
+        [ text <|
+            notificationData.level
+                ++ ": "
+                ++ notificationData.message
+                ++ " "
+        , button [ onClick <| ClearNotification notificationId ] [ text "x" ]
+        ]
 
 
 focusMasterKeyInputCmd : Cmd Msg

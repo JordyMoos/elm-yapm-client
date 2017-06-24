@@ -41,7 +41,4 @@ encode notification =
 
 decodeFromJson : Value -> Maybe Notification
 decodeFromJson json =
-    json
-        |> Decode.decodeValue Decode.string
-        |> Result.toMaybe
-        |> Maybe.andThen (Decode.decodeString decoder >> Result.toMaybe)
+    Decode.decodeValue decoder json |> Result.toMaybe
