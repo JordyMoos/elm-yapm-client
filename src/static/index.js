@@ -1,5 +1,6 @@
 'use strict';
 
+import Clipboard from 'clipboard';
 import config from '../../config.json';
 import { decryptLibrary, encryptLibrary } from './js/manager.js';
 
@@ -7,13 +8,13 @@ import { decryptLibrary, encryptLibrary } from './js/manager.js';
 require("./css/style.css");
 require("./css/yapm.css");
 
-var Elm = require('./../elm/Main');
-var app = Elm.Main.fullscreen(config);
+let Elm = require('./../elm/Main');
+let app = Elm.Main.fullscreen(config);
 
-app.ports.login.subscribe(function (request) {
+app.ports.login.subscribe(request => {
   let { masterKey, library } = request;
   decryptLibrary(masterKey, library)
-    .then(function (passwords) {
+    .then(passwords => {
       app.ports.loginSuccess.send({
         library: {
           hmac: library.hmac,
@@ -23,7 +24,7 @@ app.ports.login.subscribe(function (request) {
         passwords: passwords
       });
     })
-    .catch(function (error) {
+    .catch(error => {
       console.log("error message: " + getErrorMessage(error));
 
       app.ports.notification.send({
@@ -33,9 +34,9 @@ app.ports.login.subscribe(function (request) {
     });
 });
 
-app.ports.encryptLibrary.subscribe(function (request) {
+app.ports.encryptLibrary.subscribe(request => {
   encryptLibrary(request)
-    .then(function (data) {
+    .then(data => {
       let [ oldHash, library, newHash ] = data;
       let response = {
         oldHash: oldHash,
@@ -47,7 +48,7 @@ app.ports.encryptLibrary.subscribe(function (request) {
       };
       app.ports.encryptLibrarySuccess.send(response);
     })
-    .catch(function (error) {
+    .catch(error => {
       app.ports.notification.send({
         level: "error",
         message: getErrorMessage(error),
@@ -56,4 +57,4 @@ app.ports.encryptLibrary.subscribe(function (request) {
 });
 
 // @todo
-// var clipboard = new Clipboard('.copyable');
+let clipboard = new Clipboard('.copyable');
