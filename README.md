@@ -3,14 +3,14 @@
 ## Setup the yapm-server:
 
 Clone
-`git clone https://github.com/marcusklaas/yapm-server.git`
-
-`cd yapm-server`
-
-`composer install`
+```sh
+$ git clone https://github.com/marcusklaas/yapm-server.git
+$ cd yapm-server
+$ composer install
+```
 
 Super cheaty CORS fix in `index.php`
-```
+```php
 // Add to top of the file
 // This allows cross origin requests
 header('Access-Control-Allow-Origin: *');
@@ -23,10 +23,12 @@ $app->match("{url}", function($url) use ($app) { return "OK"; })->assert('url', 
 ```
 
 Run in with php
-`php -S localhost:8001` (Or whatever port is set in yapm-elm-client/config.json)
+```sh
+$ php -S localhost:8001
+```
+(Or whatever port is set in yapm-elm-client/config.json)
 
-
-##How to setup dev mode:
+## How to setup dev mode:
 
 With npm
 
@@ -41,4 +43,12 @@ $ yarn install
 $ yarn dev
  ```
 
-Then goto `localhost:3000` in the browser
+Then goto `localhost:3000` in the browser.
+
+## Production build
+
+```sh
+$ yarn prod
+```
+
+The result will be in the `dist` directory.
