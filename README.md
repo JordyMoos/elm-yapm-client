@@ -28,34 +28,17 @@ Run in with php
 
 ##How to setup dev mode:
 
-Install elm modules
-`elm-package install`
+With npm
 
-Install grunt stuff and additional dependencies
-`npm install`
+```sh
+$ npm install
+$ npm run dev
+```
 
-Compile elm and assets with grunt
-`grunt`
+With yarn
+```sh
+$ yarn install
+$ yarn dev
+ ```
 
-### Now see the password manager
-
-#### Easy approach
-
-Install a cors enabler
-https://addons.mozilla.org/nl/firefox/addon/cors-everywhere/
-
-And enable it
-
-Then goto the index.html's file in your browser.
-`file:///home/jordy/workspace/elm-yapm-client/index.html`
-
-You need to do `grunt` after every change
-
-#### Alternative approach
-
-Run this in another browser
-`elm-reactor`
-
-Then goto `localhost:8000/index.html` in the browser
-
-You probably need to redo `grunt` and `elm-reactor` after every change
+Then goto `localhost:3000` in the browser
