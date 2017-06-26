@@ -191,6 +191,7 @@ update msg model =
             let
                 _ =
                     Debug.log "Response error" (toString errorValue)
+
                 notifications =
                     (Notification.initError "Upload error.") :: model.notifications
             in
@@ -457,9 +458,9 @@ viewModal modal =
 
 viewNotifications : List Notification.Notification -> Html Msg
 viewNotifications notifications =
-    div [ id "notificationContainer" ]
-        <| List.reverse
-        <| List.map viewNotification notifications
+    div [ id "notificationContainer" ] <|
+        List.reverse <|
+            List.map viewNotification notifications
 
 
 viewNotification : Notification.Notification -> Html Msg
@@ -526,9 +527,11 @@ viewPassword { password, id, isVisible } =
                 , div [ class "comment" ] [ text password.comment ]
                 ]
             , div [ class "actions" ]
-                [ a [ class "copyable copyPassword"
+                [ a
+                    [ class "copyable copyPassword"
                     , attribute "data-clipboard-text" password.password
-                    , onClick NotifyCopy ]
+                    , onClick NotifyCopy
+                    ]
                     [ i [ class "icon-docs" ] [] ]
                 , a [ class "toggleVisibility", onClick (TogglePasswordVisibility id) ]
                     [ i [ class "icon-eye" ] [] ]
@@ -542,20 +545,25 @@ viewPassword { password, id, isVisible } =
 
 viewObscuredField : String -> String -> Bool -> Html Msg
 viewObscuredField fieldId message isVisible =
-    span
-        [ class ("copyable " ++ (getPasswordVisibility isVisible))
-        , attribute "data-clipboard-text" message
-        , id fieldId
-        ]
-        [ text message ]
+    let
+        content =
+            if isVisible then
+                message
+            else
+                "-"
 
-
-getPasswordVisibility : Bool -> String
-getPasswordVisibility isVisible =
-    if isVisible then
-        ""
-    else
-        "obscured"
+        classes =
+            if isVisible then
+                "copyable"
+            else
+                "copyable obscured"
+    in
+        span
+            [ class classes
+            , attribute "data-clipboard-text" message
+            , id fieldId
+            ]
+            [ text content ]
 
 
 uploadLibraryCmd : String -> EncryptLibrarySuccess.EncryptLibrarySuccess -> Library.Library -> String -> Cmd Msg
