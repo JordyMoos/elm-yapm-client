@@ -17,6 +17,11 @@ initError message =
     init "error" message
 
 
+initNotice : String -> Notification
+initNotice message =
+    init "notice" message
+
+
 init : String -> String -> Notification
 init level message =
     { level = level
