@@ -246,7 +246,7 @@ update msg model =
                         |> toSentenceCase
 
                 notifications =
-                    (Notification.initNotice message) :: model.notification
+                    (Notification.initNotice message) :: model.notifications
             in
                 ( { model | notifications = notifications }, Cmd.none, None )
 
