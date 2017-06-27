@@ -2,13 +2,14 @@ const webpack = require('webpack');
 var merge = require('webpack-merge');
 var CopyWebpackPlugin = require('copy-webpack-plugin');
 var HTMLWebpackPlugin = require('html-webpack-plugin');
+var HtmlWebpackInlineSourcePlugin = require('html-webpack-inline-source-plugin');
 var path = require('path');
 
 var TARGET_ENV = process.env.npm_lifecycle_event === 'prod'
     ? 'production'
     : 'development';
 var filename = (TARGET_ENV == 'production')
-    ? '[name]-[hash].js'
+    ? 'remove-me.js'
     : 'index.js';
 
 var common = {
@@ -18,12 +19,15 @@ var common = {
         // add hash when building for production
         filename: filename
     },
-    plugins: [new HTMLWebpackPlugin({
+    plugins: [
+        new HTMLWebpackPlugin({
             // using .ejs prevents other loaders causing errors
             template: 'src/static/index.ejs',
             // inject details of output file at end of body
-            inject: 'body'
-        })],
+            inject: 'body',
+            inlineSource: '.(js|css)$'
+        })
+    ],
     resolve: {
         modules: [
             path.join(__dirname, "src"),
@@ -130,7 +134,8 @@ if (TARGET_ENV === 'production') {
                     from: 'src/static/assets'
                 }
             ]),
-            new webpack.optimize.UglifyJsPlugin()
+            new webpack.optimize.UglifyJsPlugin(),
+            new HtmlWebpackInlineSourcePlugin()
         ],
         module: {
             rules: [
