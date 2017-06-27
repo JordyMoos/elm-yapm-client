@@ -22,6 +22,7 @@ import PageState.Auth.PasswordEditor as PasswordEditor
 import PageState.Auth.DeletePassword as DeletePassword
 import List.Extra
 import Maybe.Extra
+import String.Extra exposing (toSentenceCase)
 import Keyboard exposing (KeyCode)
 import Char exposing (toCode, fromCode)
 
@@ -73,7 +74,7 @@ type Msg
     | KeyDown KeyCode
     | KeyUp KeyCode
     | AddNotification Value
-    | NotifyCopy
+    | ContentCopied String
     | UploadLibrary (Maybe EncryptLibrarySuccess.EncryptLibrarySuccess)
     | UploadLibraryResponse Library.Library String (Result Http.Error String)
     | IncrementIdleTime Time.Time
@@ -237,10 +238,15 @@ update msg model =
             in
                 ( { model | notifications = notifications }, Cmd.none, None )
 
-        NotifyCopy ->
+        ContentCopied category ->
             let
+                message =
+                    category
+                        ++ " copied."
+                        |> toSentenceCase
+
                 notifications =
-                    (Notification.init "notice" "Password copied.") :: model.notifications
+                    (Notification.initNotice message) :: model.notifications
             in
                 ( { model | notifications = notifications }, Cmd.none, None )
 
@@ -522,15 +528,15 @@ viewPassword { password, id, isVisible } =
         li [ Html.Attributes.id ("password-" ++ stringId) ]
             [ div [ class "password-details" ]
                 [ a [ href password.url ] [ text password.title ]
-                , viewObscuredField ("password-username-" ++ stringId) password.username isVisible
-                , viewObscuredField ("password-password-" ++ stringId) password.password isVisible
+                , viewObscuredField "username" password.username isVisible
+                , viewObscuredField "password" password.password isVisible
                 , div [ class "comment" ] [ text password.comment ]
                 ]
             , div [ class "actions" ]
                 [ a
                     [ class "copyable copyPassword"
                     , attribute "data-clipboard-text" password.password
-                    , onClick NotifyCopy
+                    , onClick (ContentCopied "password")
                     ]
                     [ i [ class "icon-docs" ] [] ]
                 , a [ class "toggleVisibility", onClick (TogglePasswordVisibility id) ]
@@ -544,7 +550,7 @@ viewPassword { password, id, isVisible } =
 
 
 viewObscuredField : String -> String -> Bool -> Html Msg
-viewObscuredField fieldId message isVisible =
+viewObscuredField category message isVisible =
     let
         content =
             if isVisible then
@@ -561,7 +567,7 @@ viewObscuredField fieldId message isVisible =
         span
             [ class classes
             , attribute "data-clipboard-text" message
-            , id fieldId
+            , onClick (ContentCopied category)
             ]
             [ text content ]
 

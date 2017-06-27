@@ -13,8 +13,13 @@ type alias Notification =
 
 
 initError : String -> Notification
-initError message =
-    init "error" message
+initError =
+    init "error"
+
+
+initNotice : String -> Notification
+initNotice =
+    init "notice"
 
 
 init : String -> String -> Notification
