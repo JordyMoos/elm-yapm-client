@@ -24,6 +24,7 @@
     "elm-webpack-loader": "^4.3.1",
     "extract-text-webpack-plugin": "^2.1.2",
     "file-loader": "^0.11.2",
+    "html-webpack-inline-source-plugin": "0.0.9",
     "html-webpack-plugin": "^2.28.0",
     "node-sass": "^4.5.3",
     "postcss-loader": "^2.0.6",
