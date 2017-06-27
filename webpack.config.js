@@ -78,10 +78,10 @@ var common = {
                 exclude: [
                     /elm-stuff/, /node_modules/
                 ],
-                loader: "file-loader"
+                loader: "url-loader"
             }, {
                 test: /\.(jpe?g|png|gif|svg)$/i,
-                loader: 'file-loader'
+                loader: 'url-loader'
             }
         ]
     }
@@ -129,11 +129,6 @@ if (TARGET_ENV === 'production') {
     console.log('Building for prod...');
     module.exports = merge(common, {
         plugins: [
-            new CopyWebpackPlugin([
-                {
-                    from: 'src/static/assets'
-                }
-            ]),
             new webpack.optimize.UglifyJsPlugin(),
             new HtmlWebpackInlineSourcePlugin()
         ],
