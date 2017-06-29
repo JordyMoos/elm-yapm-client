@@ -25,8 +25,6 @@ app.ports.login.subscribe(request => {
       });
     })
     .catch(error => {
-      console.log("error message: " + getErrorMessage(error));
-
       app.ports.notification.send({
         level: "error",
         message: getErrorMessage(error),
