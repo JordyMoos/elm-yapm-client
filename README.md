@@ -8,7 +8,7 @@
   ```sh
   $ npm install
   ```
-- Set up the yapm php server (https://github.com/marcus/yapm-server)
+- Set up the yapm php server (https://github.com/marcusklaas/yapm-server)
 - Set the password api endpoint in `config.json`
 - Build the client:
 
@@ -55,7 +55,7 @@ Run in with php
 ```sh
 $ php -S localhost:8001
 ```
-(Or whatever port is set in yapm-elm-client/config.json)
+(Or whatever port is set in elm-yapm-client/config.json)
 
 ### Build client:
 
