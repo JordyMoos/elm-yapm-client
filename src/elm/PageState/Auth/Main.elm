@@ -127,7 +127,7 @@ init config { library, masterKey, passwords } =
             , keysPressed = KeysPressed False False
             }
     in
-        model ! []
+        model ! [ focusFilter ]
 
 
 subscriptions : Sub Msg
