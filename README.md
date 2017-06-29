@@ -1,6 +1,27 @@
-# Prerequisite:
+## Getting started:
 
-## Setup the yapm-server:
+- Set up the yapm php server (https://github.com/marcus/yapm-server)
+- Set the password api end point in `config.json`
+- Build the client:
+
+  With yarn
+
+  ```sh
+  $ yarn prod
+  ```
+
+  With npm
+
+  ```sh
+  $ npm run prod
+  ```
+
+  The resulting file `index.html` will be in the `dist` directory.
+- Place the html file on your webserver and chmod it `555`
+
+## How to setup dev mode:
+
+### Setup the yapm-server on your local machine:
 
 Clone
 ```sh
@@ -28,7 +49,7 @@ $ php -S localhost:8001
 ```
 (Or whatever port is set in yapm-elm-client/config.json)
 
-## How to setup dev mode:
+### Build client:
 
 With npm
 
@@ -44,11 +65,3 @@ $ yarn dev
  ```
 
 Then goto `localhost:3000` in the browser.
-
-## Production build
-
-```sh
-$ yarn prod
-```
-
-The result will be in the `dist` directory.
