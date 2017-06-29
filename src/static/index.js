@@ -54,5 +54,7 @@ app.ports.encryptLibrary.subscribe(request => {
     });
 });
 
+window.onscroll = () => app.ports.scroll.send({});
+
 // @todo
 let clipboard = new Clipboard('.copyable');

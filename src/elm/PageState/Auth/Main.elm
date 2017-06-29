@@ -141,6 +141,7 @@ subscriptions =
         , Keyboard.downs (\_ -> ResetTimer)
         , Keyboard.downs KeyDown
         , Keyboard.ups KeyUp
+        , Ports.scroll (\_ -> ResetTimer)
         ]
 
 

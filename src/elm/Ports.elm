@@ -19,3 +19,6 @@ port loginSuccess : (Value -> msg) -> Sub msg
 
 
 port encryptLibrarySuccess : (Value -> msg) -> Sub msg
+
+
+port scroll : (Value -> msg) -> Sub msg
