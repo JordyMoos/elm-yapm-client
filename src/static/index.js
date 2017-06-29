@@ -11,6 +11,18 @@ require("./css/yapm.css");
 let Elm = require('./../elm/Main');
 let app = Elm.Main.fullscreen(config);
 
+function getErrorMessage(error) {
+  if (typeof(error) === 'string') {
+    return error;
+  }
+  if (typeof(error) === 'object') {
+    if (error.message && typeof(error.message) === 'string') {
+      return error.message;
+    }
+  }
+  return 'Unknown error';
+}
+
 app.ports.login.subscribe(request => {
   let { masterKey, library } = request;
   decryptLibrary(masterKey, library)
