@@ -14,14 +14,10 @@ import Util
 import Views.Modal exposing (..)
 
 
-randomPasswordSize : Int
-randomPasswordSize =
-    16
-
-
 type alias Model =
     { fields : Fields
     , passwordId : Maybe Int
+    , randomPasswordSize : Int
     }
 
 
@@ -46,13 +42,13 @@ type SupervisorCmd
     | AddPassword Password.Password
 
 
-initNew : Model
+initNew : Int -> Model
 initNew =
     Model initFields Nothing
 
 
-initEdit : Int -> Password.Password -> Model
-initEdit passwordId password =
+initEdit : Int -> Password.Password -> Int -> Model
+initEdit passwordId password randomPasswordSize =
     let
         fields =
             Dict.fromList
@@ -64,7 +60,7 @@ initEdit passwordId password =
                 , ( "comment", password.comment )
                 ]
     in
-        Model fields (Just passwordId)
+        Model fields (Just passwordId) randomPasswordSize
 
 
 initFields : Fields
@@ -93,7 +89,7 @@ update msg model =
                 ( { model | fields = newFields }, Cmd.none, None )
 
         GetRandomPassword ->
-            ( model, Random.generate RandomPassword randomPasswordGenerator, None )
+            ( model, Random.generate RandomPassword <| randomPasswordGenerator model.randomPasswordSize, None )
 
         RandomPassword password ->
             let
@@ -165,8 +161,8 @@ viewForm model =
         ]
 
 
-randomPasswordGenerator : Random.Generator String
-randomPasswordGenerator =
+randomPasswordGenerator : Int -> Random.Generator String
+randomPasswordGenerator randomPasswordSize =
     Random.Extra.choices
         [ Random.Char.upperCaseLatin
         , Random.Char.lowerCaseLatin

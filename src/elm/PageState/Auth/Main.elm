@@ -302,7 +302,7 @@ update msg model =
                     ( model, Cmd.none, None )
 
         OpenNewPasswordModal ->
-            ( { model | modal = (PasswordEditorModal PasswordEditor.initNew) }
+            ( { model | modal = PasswordEditorModal (PasswordEditor.initNew model.config.randomPasswordSize) }
             , Cmd.none
             , None
             )
@@ -315,7 +315,7 @@ update msg model =
                 resultModel =
                     case maybePassword of
                         Just password ->
-                            { model | modal = (PasswordEditorModal <| PasswordEditor.initEdit passwordId password.password) }
+                            { model | modal = PasswordEditorModal <| PasswordEditor.initEdit passwordId password.password model.config.randomPasswordSize }
 
                         Nothing ->
                             model
