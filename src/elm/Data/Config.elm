@@ -5,4 +5,5 @@ type alias Config =
     { apiEndPoint : String
     , localStorageKey : String
     , maxIdleTime : Int
+    , randomPasswordSize : Int
     }
