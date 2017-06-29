@@ -34,7 +34,8 @@ type alias Model =
     , passwords : List WrappedPassword
     , uid : Int
     , filter : String
-    , idleTime : Int
+    , lastActiveTime : Maybe Float
+    , resetTimer : Bool
     , notifications : List Notification.Notification
     , modal : Modal
     , keysPressed : KeysPressed
@@ -77,8 +78,8 @@ type Msg
     | ContentCopied String
     | UploadLibrary (Maybe EncryptLibrarySuccess.EncryptLibrarySuccess)
     | UploadLibraryResponse Library.Library String (Result Http.Error String)
-    | IncrementIdleTime Time.Time
-    | ResetIdleTime Mouse.Position
+    | CheckInactivityTimer Time.Time
+    | ResetTimer
     | EncryptLibrary
     | TogglePasswordVisibility Int
     | UpdateFilter String
@@ -119,7 +120,8 @@ init config { library, masterKey, passwords } =
             , passwords = wrappedPasswords
             , uid = lastId
             , filter = ""
-            , idleTime = 0
+            , lastActiveTime = Nothing
+            , resetTimer = False
             , notifications = []
             , modal = NoModal
             , keysPressed = KeysPressed False False
@@ -132,10 +134,11 @@ subscriptions : Sub Msg
 subscriptions =
     Sub.batch
         [ Sub.map UploadLibrary libraryEncriptionSuccess
-        , Time.every Time.second IncrementIdleTime
-        , Mouse.clicks ResetIdleTime
-        , Mouse.moves ResetIdleTime
-        , Mouse.downs ResetIdleTime
+        , Time.every Time.second CheckInactivityTimer
+        , Mouse.clicks (\_ -> ResetTimer)
+        , Mouse.moves (\_ -> ResetTimer)
+        , Mouse.downs (\_ -> ResetTimer)
+        , Keyboard.downs (\_ -> ResetTimer)
         , Keyboard.downs KeyDown
         , Keyboard.ups KeyUp
         ]
@@ -205,14 +208,23 @@ update msg model =
                 , None
                 )
 
-        IncrementIdleTime _ ->
-            if model.idleTime + 1 > model.config.maxIdleTime then
-                ( model, Cmd.none, Quit )
-            else
-                ( { model | idleTime = model.idleTime + 1 }, Cmd.none, None )
+        CheckInactivityTimer t ->
+            let
+                now = Time.inSeconds t
+            in
+                case model.lastActiveTime of
+                    Nothing ->
+                        ( { model | lastActiveTime = Just now }, Cmd.none, None )
+                    Just activeTimestamp ->
+                        if model.resetTimer then
+                            ( { model | lastActiveTime = Just now, resetTimer = False }, Cmd.none, None )
+                        else if floor (now - activeTimestamp) > model.config.maxIdleTime then
+                            ( model, Cmd.none, Quit )
+                        else
+                            ( model, Cmd.none, None )
 
-        ResetIdleTime _ ->
-            ( { model | idleTime = 0 }, Cmd.none, None )
+        ResetTimer ->
+            ( { model | resetTimer = True }, Cmd.none, None )
 
         EncryptLibrary ->
             ( model, createEncryptLibraryCmd model Nothing, None )
@@ -228,7 +240,7 @@ update msg model =
                 ( { model | passwords = List.map updatePassword model.passwords }, Cmd.none, None )
 
         UpdateFilter newFilter ->
-            ( { model | filter = newFilter, idleTime = 0 }, Cmd.none, None )
+            ( { model | filter = newFilter }, Cmd.none, None )
 
         AddNotification json ->
             let
