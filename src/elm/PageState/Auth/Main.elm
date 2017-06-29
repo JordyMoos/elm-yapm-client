@@ -162,7 +162,7 @@ update msg model =
                     updatePressedKeyState model.keysPressed keyCode True
 
                 cmd =
-                    if keysPressed.e && keysPressed.ctrl then
+                    if keysPressed.e && keysPressed.ctrl && model.modal == NoModal then
                         focusFilter
                     else
                         Cmd.none
