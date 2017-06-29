@@ -1,7 +1,15 @@
 ## Getting started:
 
+- Clone the repository:
+  ```sh
+  $ git clone https://github.com/JordyMoos/elm-yapm-client.git
+  ```
+- Install the dependencies:
+  ```sh
+  $ npm install
+  ```
 - Set up the yapm php server (https://github.com/marcus/yapm-server)
-- Set the password api end point in `config.json`
+- Set the password api endpoint in `config.json`
 - Build the client:
 
   With yarn
