@@ -211,11 +211,13 @@ update msg model =
 
         CheckInactivityTimer t ->
             let
-                now = Time.inSeconds t
+                now =
+                    Time.inSeconds t
             in
                 case model.lastActiveTime of
                     Nothing ->
                         ( { model | lastActiveTime = Just now }, Cmd.none, None )
+
                     Just activeTimestamp ->
                         if model.resetTimer then
                             ( { model | lastActiveTime = Just now, resetTimer = False }, Cmd.none, None )
@@ -513,6 +515,8 @@ viewNavBar model =
                 [ i [ class "icon-wrench" ] []
                 , text " New Master Key"
                 ]
+            , button [ class "logout btn", onClick Logout ]
+                [ text " Logout" ]
             ]
         ]
 
