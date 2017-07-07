@@ -3,8 +3,8 @@ Yet Another Password Manager Client in Elm
 
 This project is based on the the [yet-another-password-manager] from [marcusklaas]
 
-[yet-another-password-manager] : https://github.com/marcusklaas/yapm-client
-[marcusklaas] : https://github.com/marcusklaas
+[yet-another-password-manager]: https://github.com/marcusklaas/yapm-client
+[marcusklaas]: https://github.com/marcusklaas
 
 ## Getting started:
 
