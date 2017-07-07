@@ -1,7 +1,7 @@
 {
     "version": "1.0.0",
     "summary": "Yet Another Password Manager in Elm",
-    "repository": "https://github.com/marcusklaas/yet-another-password-manager.git",
+    "repository": "https://github.com/JordyMoos/elm-yapm-client.git",
     "license": "MIT",
     "source-directories": [
         "./src/elm"

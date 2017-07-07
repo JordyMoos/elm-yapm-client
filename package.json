@@ -1,9 +1,9 @@
 {
   "name": "yet-another-password-manager",
-  "version": "0.3.0",
+  "version": "1.0..0",
   "repository": {
     "type": "git",
-    "url": "https://www.github.com/marcusklaas/yet-another-password-manager"
+    "url": "https://github.com/JordyMoos/elm-yapm-client.git"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
