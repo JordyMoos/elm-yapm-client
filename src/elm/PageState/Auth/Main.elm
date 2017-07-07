@@ -269,10 +269,13 @@ update msg model =
             ( model, Cmd.none, Quit )
 
         OpenNewMasterKeyModal ->
-            ( { model | modal = (NewMasterKeyModal NewMasterKey.init) }
-            , Cmd.none
-            , None
-            )
+            if model.config.masterKeyAllowEdit then
+                ( { model | modal = (NewMasterKeyModal NewMasterKey.init) }
+                , Cmd.none
+                , None
+                )
+            else
+                ( model, Cmd.none, None )
 
         NewMasterKeyMsg subMsg ->
             case model.modal of
@@ -511,7 +514,7 @@ viewNavBar model =
                 [ i [ class "icon-plus" ] []
                 , text " New Password"
                 ]
-            , button [ class "newMasterKey btn", onClick OpenNewMasterKeyModal ]
+            , button [ class "newMasterKey btn", disabled (not model.config.masterKeyAllowEdit), onClick OpenNewMasterKeyModal ]
                 [ i [ class "icon-wrench" ] []
                 , text " New Master Key"
                 ]

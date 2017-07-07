@@ -6,4 +6,5 @@ type alias Config =
     , localStorageKey : String
     , maxIdleTime : Int
     , randomPasswordSize : Int
+    , masterKeyAllowEdit : Bool
     }
