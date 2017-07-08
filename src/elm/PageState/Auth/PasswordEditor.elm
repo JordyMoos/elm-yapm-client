@@ -42,12 +42,12 @@ type SupervisorCmd
     | AddPassword Password.Password
 
 
-initNew : Int -> Model
-initNew =
-    Model initFields Nothing
+initNew : Int -> ( Model, Cmd Msg )
+initNew passwordSize =
+    ( Model initFields Nothing passwordSize, Util.focus "title" NoOp )
 
 
-initEdit : Int -> Password.Password -> Int -> Model
+initEdit : Int -> Password.Password -> Int -> ( Model, Cmd Msg )
 initEdit passwordId password randomPasswordSize =
     let
         fields =
@@ -60,7 +60,7 @@ initEdit passwordId password randomPasswordSize =
                 , ( "comment", password.comment )
                 ]
     in
-        Model fields (Just passwordId) randomPasswordSize
+        ( Model fields (Just passwordId) randomPasswordSize, Util.focus "title" NoOp )
 
 
 initFields : Fields

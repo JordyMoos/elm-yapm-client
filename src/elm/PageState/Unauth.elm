@@ -14,6 +14,7 @@ import Data.Library as Library
 import Data.LoginRequest as LoginRequest
 import Data.User as User
 import Data.Config exposing (Config)
+import Util
 
 
 type alias Model =
@@ -51,7 +52,7 @@ init config =
     , masterKeyInput = ""
     , masterKey = Nothing
     }
-        ! [ focusMasterKeyInputCmd, downloadLibraryCmd config.apiEndPoint ]
+        ! [ Util.focus "encryptionKey" NoOp, downloadLibraryCmd config.apiEndPoint ]
 
 
 subscriptions : Sub Msg
@@ -118,7 +119,7 @@ update msg model =
             let
                 notifications =
                     List.take (notificationId - 1) model.notifications
-                        ++ List.drop notificationId model.notifications 
+                        ++ List.drop notificationId model.notifications
             in
                 ( { model | notifications = notifications }, Cmd.none, None )
 
@@ -169,9 +170,10 @@ viewLoginForm model =
 
 viewNotifications : List Notification.Notification -> Html Msg
 viewNotifications notifications =
-    ol [ id "notificationList" ]
-       <| List.map2 viewNotification notifications
-       <| List.range 1 <| List.length notifications
+    ol [ id "notificationList" ] <|
+        List.map2 viewNotification notifications <|
+            List.range 1 <|
+                List.length notifications
 
 
 viewNotification : Notification.Notification -> Int -> Html Msg
@@ -184,12 +186,6 @@ viewNotification notificationData notificationId =
                 ++ " "
         , button [ onClick <| ClearNotification notificationId ] [ text "x" ]
         ]
-
-
-focusMasterKeyInputCmd : Cmd Msg
-focusMasterKeyInputCmd =
-    Dom.focus "encryptionKey"
-        |> Task.attempt (\_ -> NoOp)
 
 
 downloadLibraryCmd : String -> Cmd Msg
