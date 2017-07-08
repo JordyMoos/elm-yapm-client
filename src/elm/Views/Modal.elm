@@ -21,13 +21,13 @@ viewModalHeader closeMsg title =
             , onClick closeMsg
             , attribute "aria-hidden" "true"
             ]
-            [ text "x" ]
+            [ text "🗙" ]
         , h4 [ id "modalHeader" ]
             [ text title ]
         ]
 
 
-viewFormInput : String -> Dict String String -> String -> String -> (String -> String -> msg) -> Html msg
+viewFormInput : String -> Dict String String -> String -> String -> (String -> String -> msg) -> List (Html msg)
 viewFormInput dictName fields title inputType onInputMsg =
     let
         maybeFieldValue =
@@ -35,25 +35,20 @@ viewFormInput dictName fields title inputType onInputMsg =
     in
         case maybeFieldValue of
             Just fieldValue ->
-                div
-                    []
-                    [ label
-                        [ for dictName ]
-                        [ text title ]
-                    , div
-                        []
-                        [ input
-                            [ attribute "type" inputType
-                            , value fieldValue
-                            , onInput (onInputMsg dictName)
-                            , id dictName
-                            ]
-                            []
-                        ]
+                [ label
+                    [ for dictName ]
+                    [ text title ]
+                , input
+                    [ attribute "type" inputType
+                    , value fieldValue
+                    , onInput (onInputMsg dictName)
+                    , id dictName
                     ]
+                    []
+                ]
 
             Nothing ->
-                text ""
+                []
 
 
 onSelfClickWithId : String -> msg -> msg -> List (Attribute msg)

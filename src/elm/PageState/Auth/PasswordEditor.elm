@@ -152,13 +152,12 @@ view model =
 viewForm : Model -> Html Msg
 viewForm model =
     Html.form []
-        [ viewFormInput "title" model.fields "Title" "text" FieldInput
-        , viewFormInput "url" model.fields "URL" "text" FieldInput
-        , viewFormInput "username" model.fields "Username" "text" FieldInput
-        , viewFormInput "password" model.fields "Password" "password" FieldInput
-        , viewFormInput "passwordRepeat" model.fields "Password Repeat" "password" FieldInput
-        , viewFormInput "comment" model.fields "Comment" "text" FieldInput
-        ]
+        <| viewFormInput "title" model.fields "Title" "text" FieldInput
+            ++ viewFormInput "url" model.fields "URL" "text" FieldInput
+            ++ viewFormInput "username" model.fields "Username" "text" FieldInput
+            ++ viewFormInput "password" model.fields "Password" "password" FieldInput
+            ++ viewFormInput "passwordRepeat" model.fields "Password Repeat" "password" FieldInput
+            ++ viewFormInput "comment" model.fields "Comment" "text" FieldInput
 
 
 randomPasswordGenerator : Int -> Random.Generator String

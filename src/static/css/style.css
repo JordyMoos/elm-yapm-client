@@ -1,5 +1,22 @@
 body {
     font-size: 150%;
+    font-family: helvetica;
+}
+
+label {
+    display: block;
+}
+
+div.modal input {
+    width: 100%;
+}
+
+button.close {
+    float: right;
+    border: 0;
+    margin: 0;
+    background: rgba(0, 0, 0, 0);
+    padding-right: 0;
 }
 
 #welcome {
@@ -21,7 +38,7 @@ ol {
 
 #authorized {
     position: relative;
-    padding: 0 0 0 0;
+    padding: 0 0.5em 0 0.5em;
     max-width: 40em;
     margin: 0 auto;
 }
@@ -32,8 +49,8 @@ h2 {
 
 li {
     list-style-type: none;
-    border: 1px #000 solid;
-    padding: 0.3em;
+    border-top: 1px #888 solid;
+    padding: 0.3em 0 0.3em 0;
     position: relative;
     margin-bottom: 0.3em;
     display: grid;
@@ -60,7 +77,6 @@ ul {
 
 .password-details a {
     font-size: 0.83em;
-    margin: 0.2em;
     display: block;
     font-weight: bold;
     text-decoration: none;
@@ -74,6 +90,7 @@ button {
     padding-top: 1px;
     padding-bottom: 1px;
     vertical-align: top;
+    cursor: pointer;
 }
 
 input {
@@ -85,8 +102,7 @@ input {
 }
 
 h4 {
-    display: inline-block;
-    margin: 0 0.2em;
+    margin: 0;
 }
 
 .modal form {

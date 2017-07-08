@@ -128,6 +128,5 @@ viewConfirmationModal model =
 viewNewForm : Model -> Html Msg
 viewNewForm model =
     Html.form []
-        [ viewFormInput "masterKey" model.fields "New Master Key" "password" FieldInput
-        , viewFormInput "masterKeyRepeat" model.fields "Master Key Repeat" "password" FieldInput
-        ]
+        <| viewFormInput "masterKey" model.fields "New Master Key" "password" FieldInput
+            ++ viewFormInput "masterKeyRepeat" model.fields "Master Key Repeat" "password" FieldInput
