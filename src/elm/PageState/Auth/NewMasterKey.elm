@@ -96,10 +96,8 @@ viewFormModal model =
         , viewNewForm model
         , div []
             [ button
-                [ class "btn-primary"
-                , onClick Submit
-                ]
-                [ i [ class "icon-attention" ] []
+                [ onClick Submit ]
+                [ i [ class "icon-floppy" ] []
                 , text "Save"
                 ]
             ]
@@ -114,13 +112,13 @@ viewConfirmationModal model =
         [ viewModalHeader Close "New Master Key Confirmation"
         , div []
             [ p []
-                [ text "Are you sure you want to create a new master key?" ]
+                [ text "Are you sure you want to set a new master key?" ]
             ]
         , div []
-            [ button [ class "btn-default", onClick Close ]
-                [ text "Cancel" ]
-            , button [ class "btn-danger", onClick SubmitConfirmation ]
-                [ text "Change Master Key" ]
+            [ button [ onClick SubmitConfirmation ]
+                [ i [ class "icon-attention" ] []
+                , text "Change Master Key"
+                ]
             ]
         ]
 

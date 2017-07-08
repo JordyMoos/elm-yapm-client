@@ -1,6 +1,7 @@
 body {
-    font-size: 150%;
+    font-size: 140%;
     font-family: helvetica;
+    margin: 0;
 }
 
 label {
@@ -33,7 +34,7 @@ div#actionContainer {
     margin: 0 0 0 0.30em;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 50em) {
     #actionContainer > button > span {
         display: none;
     }
@@ -69,6 +70,10 @@ ol {
     padding: 0 0.3em 0 0.3em;
     max-width: 40em;
     margin: 0 auto;
+}
+
+#unauthorized {
+    padding: 0 0.3em 0 0.3em;
 }
 
 h2 {
@@ -196,7 +201,7 @@ h4 {
     margin: 0 auto;
     background-color: #FFF;
     max-width: 25em;
-    padding: 1em;
+    padding: 1em .3em;
 }
 
 .modal-container {

@@ -21,7 +21,7 @@ viewModalHeader closeMsg title =
             , onClick closeMsg
             , attribute "aria-hidden" "true"
             ]
-            [ text "🗙" ]
+            [ text "✖" ]
         , h4 [ id "modalHeader" ]
             [ text title ]
         ]

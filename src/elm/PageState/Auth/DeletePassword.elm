@@ -50,15 +50,15 @@ view model =
     viewModalContainer
         Close
         NoOp
-        [ viewModalHeader Close "Delete password confirmation"
+        [ viewModalHeader Close "Delete Confirmation"
         , div []
             [ p []
-                [ text <| "Are you sure you want to delete the password with the title \"" ++ model.password.title ++ "\"?" ]
+                [ text <| "Are you sure you want to delete entry for " ++ model.password.title ++ "?" ]
             ]
         , div []
-            [ button [ class "btn-default", onClick Close ]
-                [ text "Cancel" ]
-            , button [ class "btn-danger", onClick SubmitConfirmation ]
-                [ text "Delete" ]
+            [ button [ onClick SubmitConfirmation ]
+                [ i [ class "icon-trash" ] []
+                , text "Delete"
+                ]
             ]
         ]

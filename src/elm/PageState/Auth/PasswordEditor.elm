@@ -132,16 +132,12 @@ view model =
             , viewForm model
             , div []
                 [ button
-                    [ class "btn-default"
-                    , onClick GetRandomPassword
-                    ]
+                    [ onClick GetRandomPassword ]
                     [ i [ class "icon-shuffle" ] []
                     , text "Random Password"
                     ]
                 , button
-                    [ class "btn-primary"
-                    , onClick Submit
-                    ]
+                    [ onClick Submit ]
                     [ i [ class "icon-floppy" ] []
                     , text "Save"
                     ]
