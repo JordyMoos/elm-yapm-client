@@ -38,9 +38,9 @@ type SupervisorCmd
     | SaveNewMasterKey (Maybe String)
 
 
-init : Model
+init : ( Model, Cmd Msg )
 init =
-    Model NewForm initFields
+    ( Model NewForm initFields, Util.focus "masterKey" NoOp )
 
 
 initFields : Fields

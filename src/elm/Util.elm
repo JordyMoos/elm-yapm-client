@@ -1,6 +1,8 @@
-module Util exposing ((=>), dictGetWithDefault, isValidPassword)
+module Util exposing ((=>), dictGetWithDefault, isValidPassword, focus)
 
 import Dict exposing (Dict)
+import Dom
+import Task
 
 
 (=>) : a -> b -> ( a, b )
@@ -24,3 +26,9 @@ isValidPassword dict passwordKey repeatKey =
             Dict.get repeatKey dict
     in
         Maybe.withDefault 0 (Maybe.map String.length password) >= 3 && password == repeat
+
+
+focus : String -> msg -> Cmd msg
+focus elementId onSucessMsg =
+    Dom.focus elementId
+        |> Task.attempt (\_ -> onSucessMsg)
