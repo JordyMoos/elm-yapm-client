@@ -12,6 +12,7 @@ import Random.Extra
 import Maybe.Extra
 import Util
 import Views.Modal exposing (..)
+import String.Extra exposing (toSentenceCase)
 
 
 type alias Model =
@@ -32,6 +33,7 @@ type Msg
     | Close
     | GetRandomPassword
     | RandomPassword String
+    | ContentCopied String
 
 
 type SupervisorCmd
@@ -44,7 +46,9 @@ type SupervisorCmd
 
 initNew : Int -> ( Model, Cmd Msg )
 initNew passwordSize =
-    ( Model initFields Nothing passwordSize, Util.focus "title" NoOp )
+    ( Model initFields Nothing passwordSize
+    , Cmd.batch [ Util.focus "title" NoOp, randomPasswordGenerator passwordSize ]
+    )
 
 
 initEdit : Int -> Password.Password -> Int -> ( Model, Cmd Msg )
@@ -89,7 +93,7 @@ update msg model =
                 ( { model | fields = newFields }, Cmd.none, None )
 
         GetRandomPassword ->
-            ( model, Random.generate RandomPassword <| randomPasswordGenerator model.randomPasswordSize, None )
+            ( model, randomPasswordGenerator model.randomPasswordSize, None )
 
         RandomPassword password ->
             let
@@ -100,6 +104,15 @@ update msg model =
                     Dict.update "passwordRepeat" (Maybe.map (\x -> password)) fields
             in
                 ( { model | fields = newFields }, Cmd.none, None )
+
+        ContentCopied category ->
+            let
+                message =
+                    category
+                        ++ " copied."
+                        |> toSentenceCase
+            in
+                ( model, Cmd.none, SetNotification "notice" message )
 
         Submit ->
             if Util.isValidPassword model.fields "password" "passwordRepeat" then
@@ -155,13 +168,13 @@ viewForm model =
         [ viewFormInput "title" model.fields "Title" "text" FieldInput
         , viewFormInput "url" model.fields "URL" "text" FieldInput
         , viewFormInput "username" model.fields "Username" "text" FieldInput
-        , viewFormInput "password" model.fields "Password" "password" FieldInput
+        , viewCopyPasswordFormInput (ContentCopied "password") "password" model.fields "Password" "password" FieldInput
         , viewFormInput "passwordRepeat" model.fields "Password Repeat" "password" FieldInput
         , viewFormInput "comment" model.fields "Comment" "text" FieldInput
         ]
 
 
-randomPasswordGenerator : Int -> Random.Generator String
+randomPasswordGenerator : Int -> Cmd Msg
 randomPasswordGenerator randomPasswordSize =
     Random.Extra.choices
         [ Random.Char.upperCaseLatin
@@ -172,3 +185,4 @@ randomPasswordGenerator randomPasswordSize =
           -- Some special chars
         ]
         |> Random.String.string randomPasswordSize
+        |> Random.generate RandomPassword
