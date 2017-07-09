@@ -184,7 +184,10 @@ viewNotification notificationData notificationId =
                 ++ ": "
                 ++ notificationData.message
                 ++ " "
-        , button [ onClick <| ClearNotification notificationId ] [ text "x" ]
+        , button
+            [ onClick <| ClearNotification notificationId
+            , class "close" ]
+            []
         ]
 
 
