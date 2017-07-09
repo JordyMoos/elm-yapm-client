@@ -563,6 +563,11 @@ viewPassword { password, id, isVisible } =
     let
         stringId =
             toString id
+        eyeClass =
+            if isVisible then
+                "icon-eye-off"
+            else
+                "icon-eye"
     in
         li [ Html.Attributes.id ("password-" ++ stringId) ]
             [ div [ class "password-details" ]
@@ -579,7 +584,7 @@ viewPassword { password, id, isVisible } =
                     ]
                     [ i [ class "icon-docs" ] [] ]
                 , a [ class "toggleVisibility", onClick (TogglePasswordVisibility id) ]
-                    [ i [ class "icon-eye" ] [] ]
+                    [ i [ class eyeClass ] [] ]
                 , a [ class "editPassword", onClick (OpenEditPasswordModal id) ]
                     [ i [ class "icon-edit" ] [] ]
                 , a [ class "deletePassword", onClick (OpenDeletePasswordModal id) ]
