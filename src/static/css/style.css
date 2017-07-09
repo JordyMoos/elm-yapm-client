@@ -182,7 +182,13 @@ h3 {
 }
 
 .modal form {
-    margin: 1em 0;
+    margin: .5em 0;
+}
+
+.modal span:first-child {
+    display: block;
+    border-bottom: 1px solid #c9c9c9;
+    padding-bottom: .5em;
 }
 
 #notificationContainer {
