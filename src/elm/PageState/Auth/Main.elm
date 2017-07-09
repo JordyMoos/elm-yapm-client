@@ -500,11 +500,8 @@ viewNotifications notifications =
 viewNotification : Notification.Notification -> Html Msg
 viewNotification notificationData =
     div [ class <| "notification " ++ notificationData.level ]
-        [ text <|
-            notificationData.level
-                ++ ": "
-                ++ notificationData.message
-                ++ " "
+        [ strong [] [ text <| notificationData.level ++ ": " ]
+        , text <| notificationData.message ++ " "
         ]
 
 

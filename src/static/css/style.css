@@ -190,13 +190,14 @@ h3 {
     bottom: 0;
     left: 0;
     right: 0;
-    max-width: 40em;
+    max-width: 50em;
     margin: 0 auto;
     width: 100%;
 }
 
 .notification {
     padding: 0;
+    display: block;
     animation-name: notification;
     animation-duration: 5s;
     max-height: 0;
@@ -206,32 +207,34 @@ h3 {
 }
 
 .notice {
-    background: #8F8;
+    color: #4F8A10;
+    background: #DFF2BF;
 }
 
 .error {
-    background: #F88;
+    color: #D8000C;
+    background: #FFBABA;
 }
 
 @keyframes notification {
     10%  {
         max-height: 2em;
-        padding: .3em;
+        padding: .5em;
     }
     25%  {
         opacity: 1;
         max-height: 2em;
-        padding: .3em;
+        padding: .5em;
     }
     75%  {
         opacity: 1;
         max-height: 2em;
-        padding: .3em;
+        padding: .5em;
     }
     90%  {
         opacity: 0;
         max-height: 2em;
-        padding: .3em;
+        padding: .5em;
     }
     100% {
         opacity: 0;
