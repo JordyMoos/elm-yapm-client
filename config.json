@@ -1,6 +1,7 @@
 {
   "apiEndPoint": "http://localhost:8001",
   "localStorageKey": "password-library",
-  "maxIdleTime": 300,
-  "randomPasswordSize": 30
+  "maxIdleTime": 30,
+  "randomPasswordSize": 30,
+  "masterKeyAllowEdit": true
 }

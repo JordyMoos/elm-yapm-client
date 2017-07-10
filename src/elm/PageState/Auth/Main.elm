@@ -270,14 +270,17 @@ update msg model =
             ( model, Cmd.none, Quit )
 
         OpenNewMasterKeyModal ->
-            let
-                ( subModel, subCmd ) =
-                    NewMasterKey.init
-            in
-                ( { model | modal = NewMasterKeyModal subModel }
-                , Cmd.map NewMasterKeyMsg subCmd
-                , None
-                )
+            if model.config.masterKeyAllowEdit then
+                let
+                    ( subModel, subCmd ) =
+                        NewMasterKey.init
+                in
+                    ( { model | modal = NewMasterKeyModal subModel }
+                    , Cmd.map NewMasterKeyMsg subCmd
+                    , None
+                    )
+            else
+                ( model, Cmd.none, None )
 
         NewMasterKeyMsg subMsg ->
             case model.modal of
@@ -527,7 +530,7 @@ viewNavBar model =
                     [ i [ class "icon-plus" ] []
                     , span [] [ text " New Password" ]
                     ]
-                , button [ class "newMasterKey btn", onClick OpenNewMasterKeyModal ]
+                , button [ class "newMasterKey btn", disabled (not model.config.masterKeyAllowEdit), onClick OpenNewMasterKeyModal ]
                     [ i [ class "icon-wrench" ] []
                     , span [] [ text " New Master Key" ]
                     ]
