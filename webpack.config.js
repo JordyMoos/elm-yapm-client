@@ -3,6 +3,7 @@ var merge = require('webpack-merge');
 var CopyWebpackPlugin = require('copy-webpack-plugin');
 var HTMLWebpackPlugin = require('html-webpack-plugin');
 var HtmlWebpackInlineSourcePlugin = require('html-webpack-inline-source-plugin');
+var WebpackPwaManifest = require('webpack-pwa-manifest');
 var path = require('path');
 
 var TARGET_ENV = process.env.npm_lifecycle_event === 'prod'
@@ -26,6 +27,19 @@ var common = {
             // inject details of output file at end of body
             inject: 'body',
             inlineSource: '.(js|css)$'
+        }),
+        new WebpackPwaManifest({
+            name: 'Yet Another Password Manager',
+            short_name: 'Passwords',
+            display: 'fullscreen',
+            orientation: 'portrait',
+            background_color: '#ffffff',
+            icons: [
+                {
+                    src: path.resolve('src/static/assets/img/favicon.png'),
+                    sizes: [96, 128, 192, 256, 384, 512] // multiple sizes
+                }
+            ]
         })
     ],
     resolve: {
