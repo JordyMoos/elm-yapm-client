@@ -25,6 +25,7 @@ import Maybe.Extra
 import String.Extra exposing (toSentenceCase)
 import Keyboard exposing (KeyCode)
 import Char exposing (toCode, fromCode)
+import Util
 
 
 type alias Model =
@@ -270,10 +271,14 @@ update msg model =
 
         OpenNewMasterKeyModal ->
             if model.config.masterKeyAllowEdit then
-                ( { model | modal = (NewMasterKeyModal NewMasterKey.init) }
-                , Cmd.none
-                , None
-                )
+                let
+                    ( subModel, subCmd ) =
+                        NewMasterKey.init
+                in
+                    ( { model | modal = NewMasterKeyModal subModel }
+                    , Cmd.map NewMasterKeyMsg subCmd
+                    , None
+                    )
             else
                 ( model, Cmd.none, None )
 
@@ -307,25 +312,33 @@ update msg model =
                     ( model, Cmd.none, None )
 
         OpenNewPasswordModal ->
-            ( { model | modal = PasswordEditorModal (PasswordEditor.initNew model.config.randomPasswordSize) }
-            , Cmd.none
-            , None
-            )
+            let
+                ( subModel, subCmd ) =
+                    PasswordEditor.initNew model.config.randomPasswordSize
+            in
+                ( { model | modal = PasswordEditorModal subModel }
+                , Cmd.map PasswordEditorMsg subCmd
+                , None
+                )
 
         OpenEditPasswordModal passwordId ->
             let
                 maybePassword =
                     List.Extra.find (\password -> password.id == passwordId) model.passwords
 
-                resultModel =
+                ( resultModel, resultCmd ) =
                     case maybePassword of
                         Just password ->
-                            { model | modal = PasswordEditorModal <| PasswordEditor.initEdit passwordId password.password model.config.randomPasswordSize }
+                            let
+                                ( subModel, subCmd ) =
+                                    PasswordEditor.initEdit passwordId password.password model.config.randomPasswordSize
+                            in
+                                ( { model | modal = PasswordEditorModal subModel }, Cmd.map PasswordEditorMsg subCmd )
 
                         Nothing ->
-                            model
+                            ( model, Cmd.none )
             in
-                ( resultModel, Cmd.none, None )
+                ( resultModel, resultCmd, None )
 
         PasswordEditorMsg subMsg ->
             case model.modal of
@@ -642,8 +655,7 @@ createEncryptLibraryCmd model newMasterKey =
 
 focusFilter : Cmd Msg
 focusFilter =
-    Dom.focus "filter"
-        |> Task.attempt (\_ -> NoOp)
+    Util.focus "filter" NoOp
 
 
 updatePressedKeyState : KeysPressed -> KeyCode -> Bool -> KeysPressed
