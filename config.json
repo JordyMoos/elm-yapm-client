@@ -3,5 +3,5 @@
   "localStorageKey": "password-library",
   "maxIdleTime": 30,
   "randomPasswordSize": 30,
-  "masterKeyAllowEdit": false
+  "masterKeyAllowEdit": true
 }

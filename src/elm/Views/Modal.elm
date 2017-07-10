@@ -5,6 +5,7 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Json.Decode as Decode
 import Dict exposing (Dict)
+import Util
 
 
 viewModalContainer : msg -> msg -> List (Html msg) -> Html msg
@@ -27,8 +28,8 @@ viewModalHeader closeMsg title =
         ]
 
 
-viewFormInput : String -> Dict String String -> String -> String -> (String -> String -> msg) -> Html msg
-viewFormInput dictName fields title inputType onInputMsg =
+viewDefaultFormInput : List (Html msg) -> String -> Dict String String -> String -> String -> (String -> String -> msg) -> Html msg
+viewDefaultFormInput additionalHtmlList dictName fields title inputType onInputMsg =
     let
         maybeFieldValue =
             Dict.get dictName fields
@@ -42,18 +43,43 @@ viewFormInput dictName fields title inputType onInputMsg =
                         [ text title ]
                     , div
                         []
-                        [ input
-                            [ attribute "type" inputType
-                            , value fieldValue
-                            , onInput (onInputMsg dictName)
-                            , id dictName
+                        (List.append
+                            [ input
+                                [ attribute "type" inputType
+                                , value fieldValue
+                                , onInput (onInputMsg dictName)
+                                , id dictName
+                                ]
+                                []
                             ]
-                            []
-                        ]
+                            additionalHtmlList
+                        )
                     ]
 
             Nothing ->
                 text ""
+
+
+viewCopyPasswordFormInput : msg -> String -> Dict String String -> String -> String -> (String -> String -> msg) -> Html msg
+viewCopyPasswordFormInput onClickMsg dictName fields title inputType onInputMsg =
+    viewDefaultFormInput
+        [ a
+            [ class "copyable copyPassword"
+            , attribute "data-clipboard-text" <| Util.dictGetWithDefault fields "" dictName
+            , onClick onClickMsg
+            ]
+            [ i [ class "icon-docs" ] [] ]
+        ]
+        dictName
+        fields
+        title
+        inputType
+        onInputMsg
+
+
+viewFormInput : String -> Dict String String -> String -> String -> (String -> String -> msg) -> Html msg
+viewFormInput =
+    viewDefaultFormInput []
 
 
 onSelfClickWithId : String -> msg -> msg -> List (Attribute msg)
