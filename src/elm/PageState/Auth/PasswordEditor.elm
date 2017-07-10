@@ -145,16 +145,12 @@ view model =
             , viewForm model
             , div []
                 [ button
-                    [ class "btn-default"
-                    , onClick GetRandomPassword
-                    ]
+                    [ onClick GetRandomPassword ]
                     [ i [ class "icon-shuffle" ] []
                     , text "Random Password"
                     ]
                 , button
-                    [ class "btn-primary"
-                    , onClick Submit
-                    ]
+                    [ onClick Submit ]
                     [ i [ class "icon-floppy" ] []
                     , text "Save"
                     ]
@@ -165,13 +161,12 @@ view model =
 viewForm : Model -> Html Msg
 viewForm model =
     Html.form []
-        [ viewFormInput "title" model.fields "Title" "text" FieldInput
-        , viewFormInput "url" model.fields "URL" "text" FieldInput
-        , viewFormInput "username" model.fields "Username" "text" FieldInput
-        , viewCopyPasswordFormInput (ContentCopied "password") "password" model.fields "Password" "password" FieldInput
-        , viewFormInput "passwordRepeat" model.fields "Password Repeat" "password" FieldInput
-        , viewFormInput "comment" model.fields "Comment" "text" FieldInput
-        ]
+        <| viewFormInput "title" model.fields "Title" "text" FieldInput
+            ++ viewFormInput "url" model.fields "URL" "text" FieldInput
+            ++ viewFormInput "username" model.fields "Username" "text" FieldInput
+            ++ viewCopyPasswordFormInput (ContentCopied "password") "password" model.fields "Password" "password" FieldInput
+            ++ viewFormInput "passwordRepeat" model.fields "Password Repeat" "password" FieldInput
+            ++ viewFormInput "comment" model.fields "Comment" "text" FieldInput
 
 
 randomPasswordGenerator : Int -> Cmd Msg

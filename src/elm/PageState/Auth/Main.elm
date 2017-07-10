@@ -503,11 +503,8 @@ viewNotifications notifications =
 viewNotification : Notification.Notification -> Html Msg
 viewNotification notificationData =
     div [ class <| "notification " ++ notificationData.level ]
-        [ text <|
-            notificationData.level
-                ++ ": "
-                ++ notificationData.message
-                ++ " "
+        [ strong [] [ text <| notificationData.level ++ ": " ]
+        , text <| notificationData.message ++ " "
         ]
 
 
@@ -515,24 +512,33 @@ viewNavBar : Model -> Html Msg
 viewNavBar model =
     nav [ attribute "role" "navigation" ]
         [ h2 [] [ text "Passwords" ]
-        , div [ attribute "role" "form" ]
-            [ input
-                [ id "filter"
-                , placeholder "Filter... <CTRL+E>"
-                , onInput UpdateFilter
+        , div []
+            [ div 
+                [ id "filterContainer"
+                , attribute "role" "form"
                 ]
-                []
-            , text " "
-            , button [ class "newPassword btn", onClick OpenNewPasswordModal ]
-                [ i [ class "icon-plus" ] []
-                , text " New Password"
+                [ input
+                    [ id "filter"
+                    , placeholder "Filter... <CTRL+E>"
+                    , onInput UpdateFilter
+                    ]
+                    []
                 ]
-            , button [ class "newMasterKey btn", disabled (not model.config.masterKeyAllowEdit), onClick OpenNewMasterKeyModal ]
-                [ i [ class "icon-wrench" ] []
-                , text " New Master Key"
+            , div
+                [ id "actionContainer" ]
+                [ button [ class "newPassword btn", onClick OpenNewPasswordModal ]
+                    [ i [ class "icon-plus" ] []
+                    , span [] [ text " New Password" ]
+                    ]
+                , button [ class "newMasterKey btn", disabled (not model.config.masterKeyAllowEdit), onClick OpenNewMasterKeyModal ]
+                    [ i [ class "icon-wrench" ] []
+                    , span [] [ text " New Master Key" ]
+                    ]
+                , button [ class "logout btn", onClick Logout ]
+                    [ i [ class "icon-logout" ] []
+                    , span [] [ text " Logout" ]
+                    ]
                 ]
-            , button [ class "logout btn", onClick Logout ]
-                [ text " Logout" ]
             ]
         ]
 
@@ -557,6 +563,11 @@ viewPassword { password, id, isVisible } =
     let
         stringId =
             toString id
+        eyeClass =
+            if isVisible then
+                "icon-eye-off"
+            else
+                "icon-eye"
     in
         li [ Html.Attributes.id ("password-" ++ stringId) ]
             [ div [ class "password-details" ]
@@ -573,7 +584,7 @@ viewPassword { password, id, isVisible } =
                     ]
                     [ i [ class "icon-docs" ] [] ]
                 , a [ class "toggleVisibility", onClick (TogglePasswordVisibility id) ]
-                    [ i [ class "icon-eye" ] [] ]
+                    [ i [ class eyeClass ] [] ]
                 , a [ class "editPassword", onClick (OpenEditPasswordModal id) ]
                     [ i [ class "icon-edit" ] [] ]
                 , a [ class "deletePassword", onClick (OpenDeletePasswordModal id) ]

@@ -22,13 +22,13 @@ viewModalHeader closeMsg title =
             , onClick closeMsg
             , attribute "aria-hidden" "true"
             ]
-            [ text "x" ]
-        , h4 [ id "modalHeader" ]
+            [ text "" ]
+        , h3 [ id "modalHeader" ]
             [ text title ]
         ]
 
 
-viewDefaultFormInput : List (Html msg) -> String -> Dict String String -> String -> String -> (String -> String -> msg) -> Html msg
+viewDefaultFormInput : List (Html msg) -> String -> Dict String String -> String -> String -> (String -> String -> msg) -> List (Html msg)
 viewDefaultFormInput additionalHtmlList dictName fields title inputType onInputMsg =
     let
         maybeFieldValue =
@@ -36,31 +36,23 @@ viewDefaultFormInput additionalHtmlList dictName fields title inputType onInputM
     in
         case maybeFieldValue of
             Just fieldValue ->
-                div
-                    []
-                    [ label
-                        [ for dictName ]
-                        [ text title ]
-                    , div
-                        []
-                        (List.append
-                            [ input
-                                [ attribute "type" inputType
-                                , value fieldValue
-                                , onInput (onInputMsg dictName)
-                                , id dictName
-                                ]
-                                []
-                            ]
-                            additionalHtmlList
-                        )
+                [ label
+                    [ for dictName ]
+                    [ text title ]
+                , input
+                    [ attribute "type" inputType
+                    , value fieldValue
+                    , onInput (onInputMsg dictName)
+                    , id dictName
                     ]
+                    []
+                ] ++ additionalHtmlList
 
             Nothing ->
-                text ""
+                []
 
 
-viewCopyPasswordFormInput : msg -> String -> Dict String String -> String -> String -> (String -> String -> msg) -> Html msg
+viewCopyPasswordFormInput : msg -> String -> Dict String String -> String -> String -> (String -> String -> msg) -> List (Html msg)
 viewCopyPasswordFormInput onClickMsg dictName fields title inputType onInputMsg =
     viewDefaultFormInput
         [ a
@@ -77,7 +69,7 @@ viewCopyPasswordFormInput onClickMsg dictName fields title inputType onInputMsg 
         onInputMsg
 
 
-viewFormInput : String -> Dict String String -> String -> String -> (String -> String -> msg) -> Html msg
+viewFormInput : String -> Dict String String -> String -> String -> (String -> String -> msg) -> List (Html msg)
 viewFormInput =
     viewDefaultFormInput []
 

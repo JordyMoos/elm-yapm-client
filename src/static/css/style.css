@@ -1,5 +1,83 @@
 body {
-    font-size: 150%;
+    font-size: 1.2em;
+    font-family: helvetica;
+    margin: 0;
+    background: #f8f8f8;
+    color: #212121;
+}
+
+label {
+    padding: 0.25em 0;
+    display: block;
+}
+
+div.modal input {
+    width: 100%;
+}
+
+nav > div {
+    display: flex;
+}
+
+#filter {
+    width: 100%;
+}
+
+div#filterContainer {
+    flex-grow: 1;
+    flex-shrink: 1;
+}
+
+div#actionContainer {
+    flex-grow: 0;
+    flex-shrink: 0;
+}
+
+#actionContainer > button {
+    margin: 0 0 0 0.30em;
+}
+
+@media (max-width: 50em) {
+    #actionContainer > button > span {
+        display: none;
+    }
+}
+
+@media (max-width: 32em) {
+    .modal {
+        padding: 1em .3em;
+    }
+}
+
+@media (min-width: 32em) {
+    .modal-container {
+        display: flex;
+        flex: 1 1 auto;
+        justify-content: center;
+        align-items: center;
+        overflow-y: auto;
+        height: 0;
+    }
+
+    .modal {
+        flex: none;
+        width: 25em;
+        padding: 1em;
+    }
+}
+
+button.close {
+    float: right;
+    border: 0;
+    margin: 0;
+    background: rgba(0, 0, 0, 0);
+    padding: 0;
+    font-size: 1.75rem;
+    line-height: .9;
+}
+
+button.close:before {
+    content: "\00D7";
 }
 
 #welcome {
@@ -21,24 +99,36 @@ ol {
 
 #authorized {
     position: relative;
-    padding: 0 0 0 0;
-    max-width: 40em;
+    padding: 0 0.3em 0 0.3em;
+    max-width: 50em;
     margin: 0 auto;
 }
 
+#unauthorized {
+    padding: 0 0.3em 0 0.3em;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 500;
+}
+
 h2 {
+    font-size: 2rem;
     margin: 0.5em 0;
+}
+
+#overview li {
+    display: grid;
+    grid-template-columns: 1fr 10rem;
+    grid-template-areas: "details actions"
 }
 
 li {
     list-style-type: none;
-    border: 1px #000 solid;
-    padding: 0.3em;
+    border-top: 1px #c9c9c9 solid;
+    padding: 0.3em 0 0.3em 0;
     position: relative;
-    margin-bottom: 0.3em;
-    display: grid;
-    grid-template-columns: 1fr 7em;
-    grid-template-areas: "details actions"
+    margin: 0.15em 0;
 }
 
 li div.password-details {
@@ -47,7 +137,8 @@ li div.password-details {
 
 li div.actions {
     align-self: center;
-    font-size: 125%;
+    font-size: 1.75rem;
+    text-align: right;
 }
 
 li span {
@@ -59,38 +150,48 @@ ul {
 }
 
 .password-details a {
-    font-size: 0.83em;
-    margin: 0.2em;
+    color: #0277bd;
     display: block;
     font-weight: bold;
     text-decoration: none;
 }
 
 button {
+    display: inline-block;
+    background: rgba(220,220,220,0.75);
+    color: #212121;
+    border: .0625rem solid rgba(220,220,220,0.75);
+    border-radius: .125rem;
+    padding: 0.5rem 0.75rem;
+    margin-right: .3rem;
+    text-decoration: none;
+    transition: background 0.3s;
+    cursor: pointer;
     font-size: inherit;
-    margin-right: 0.3em;
-    background: #EEE;
-    border: #000 2px solid;
-    padding-top: 1px;
-    padding-bottom: 1px;
-    vertical-align: top;
 }
 
 input {
     font-size: inherit;
-    padding-top: 1px;
-    padding-bottom: 1px;
-    border: #000 2px solid;
     box-sizing: border-box;
+    background: #fafafa;
+    color: #212121;
+    border: .0625rem solid #c9c9c9;
+    border-radius: .125rem;
+    padding: 0.5rem 0.75rem;
 }
 
-h4 {
-    display: inline-block;
-    margin: 0 0.2em;
+h3 {
+    margin: 0;
 }
 
 .modal form {
-    margin: 1em 0;
+    margin: .5em 0;
+}
+
+.modal span:first-child {
+    display: block;
+    border-bottom: 1px solid #c9c9c9;
+    padding-bottom: .5em;
 }
 
 #notificationContainer {
@@ -98,13 +199,14 @@ h4 {
     bottom: 0;
     left: 0;
     right: 0;
-    max-width: 40em;
+    max-width: 50em;
     margin: 0 auto;
     width: 100%;
 }
 
 .notification {
     padding: 0;
+    display: block;
     animation-name: notification;
     animation-duration: 5s;
     max-height: 0;
@@ -114,32 +216,34 @@ h4 {
 }
 
 .notice {
-    background: #8F8;
+    color: #4F8A10;
+    background: #DFF2BF;
 }
 
 .error {
-    background: #F88;
+    color: #D8000C;
+    background: #FFBABA;
 }
 
 @keyframes notification {
     10%  {
         max-height: 2em;
-        padding: .3em;
+        padding: .5em;
     }
     25%  {
         opacity: 1;
         max-height: 2em;
-        padding: .3em;
+        padding: .5em;
     }
     75%  {
         opacity: 1;
         max-height: 2em;
-        padding: .3em;
+        padding: .5em;
     }
     90%  {
         opacity: 0;
         max-height: 2em;
-        padding: .3em;
+        padding: .5em;
     }
     100% {
         opacity: 0;
@@ -149,10 +253,8 @@ h4 {
 }
 
 .modal {
-    margin: 0 auto;
-    background-color: #FFF;
-    max-width: 25em;
-    padding: 1em;
+    background-color: #EEE;
+    border-radius: .125em;
 }
 
 .modal-container {
@@ -162,7 +264,7 @@ h4 {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.3);
+    background-color: rgba(0, 0, 0, 0.45);
     overflow: auto;
 }
 
