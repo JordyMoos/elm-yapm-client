@@ -92,6 +92,7 @@ type Msg
     | PasswordEditorMsg PasswordEditor.Msg
     | OpenDeletePasswordModal PasswordId
     | DeletePasswordMsg DeletePassword.Msg
+    | FinishFilter
 
 
 type SupervisorCmd
@@ -154,6 +155,8 @@ libraryEncriptionSuccess =
 update : Msg -> Model -> ( Model, Cmd Msg, SupervisorCmd )
 update msg model =
     case msg of
+        FinishFilter ->
+            ( model, Util.blur "filter" NoOp, None )
         NoOp ->
             ( model, Cmd.none, None )
 
@@ -512,9 +515,10 @@ viewNotification notificationData =
 viewNavBar : Model -> Html Msg
 viewNavBar model =
     nav [ attribute "role" "navigation" ]
-        [ div 
+        [ Html.form 
             [ id "filterContainer"
             , attribute "role" "form"
+            , onSubmit FinishFilter
             ]
             [ input
                 [ id "filter"

@@ -29,11 +29,11 @@ var common = {
             inlineSource: '.(js|css)$'
         }),
         new WebpackPwaManifest({
-            name: 'Yet Another Password Manager',
+            name: 'Password Manager',
             short_name: 'Passwords',
-            display: 'fullscreen',
-            orientation: 'portrait',
-            background_color: '#ffffff',
+            display: 'standalone',
+            orientation: 'any',
+            background_color: '#f8f8f8',
             icons: [
                 {
                     src: path.resolve('src/static/assets/img/favicon.png'),
