@@ -15,8 +15,13 @@ div.modal input {
     width: 100%;
 }
 
-nav > div {
+nav {
     display: flex;
+    position: sticky;
+    top: 0;
+    padding: .4em 0;
+    background: #f8f8f8;
+    z-index: 2;
 }
 
 #filter {
@@ -114,7 +119,7 @@ h1, h2, h3, h4, h5, h6 {
 
 h2 {
     font-size: 2rem;
-    margin: 0.5em 0;
+    margin: 0.5em 0 0.2em 0;
 }
 
 #overview li {
@@ -147,6 +152,7 @@ li span {
 
 ul {
     padding: 0;
+    margin-top: .5em;
 }
 
 .password-details a {

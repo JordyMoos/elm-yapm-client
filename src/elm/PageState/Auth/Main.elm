@@ -470,7 +470,8 @@ update msg model =
 view : Model -> Html Msg
 view model =
     section [ id "authorized" ]
-        [ viewNavBar model
+        [ h2 [] [ text "Passwords" ]
+        , viewNavBar model
         , viewPasswordTable model
         , viewNotifications model.notifications
         , viewModal model.modal
@@ -511,33 +512,30 @@ viewNotification notificationData =
 viewNavBar : Model -> Html Msg
 viewNavBar model =
     nav [ attribute "role" "navigation" ]
-        [ h2 [] [ text "Passwords" ]
-        , div []
-            [ div 
-                [ id "filterContainer"
-                , attribute "role" "form"
+        [ div 
+            [ id "filterContainer"
+            , attribute "role" "form"
+            ]
+            [ input
+                [ id "filter"
+                , placeholder "Filter... <CTRL+E>"
+                , onInput UpdateFilter
                 ]
-                [ input
-                    [ id "filter"
-                    , placeholder "Filter... <CTRL+E>"
-                    , onInput UpdateFilter
-                    ]
-                    []
+                []
+            ]
+        , div
+            [ id "actionContainer" ]
+            [ button [ class "newPassword btn", onClick OpenNewPasswordModal ]
+                [ i [ class "icon-plus" ] []
+                , span [] [ text " New Password" ]
                 ]
-            , div
-                [ id "actionContainer" ]
-                [ button [ class "newPassword btn", onClick OpenNewPasswordModal ]
-                    [ i [ class "icon-plus" ] []
-                    , span [] [ text " New Password" ]
-                    ]
-                , button [ class "newMasterKey btn", disabled (not model.config.masterKeyAllowEdit), onClick OpenNewMasterKeyModal ]
-                    [ i [ class "icon-wrench" ] []
-                    , span [] [ text " New Master Key" ]
-                    ]
-                , button [ class "logout btn", onClick Logout ]
-                    [ i [ class "icon-logout" ] []
-                    , span [] [ text " Logout" ]
-                    ]
+            , button [ class "newMasterKey btn", disabled (not model.config.masterKeyAllowEdit), onClick OpenNewMasterKeyModal ]
+                [ i [ class "icon-wrench" ] []
+                , span [] [ text " New Master Key" ]
+                ]
+            , button [ class "logout btn", onClick Logout ]
+                [ i [ class "icon-logout" ] []
+                , span [] [ text " Logout" ]
                 ]
             ]
         ]
