@@ -1,4 +1,4 @@
-module Util exposing ((=>), dictGetWithDefault, isValidPassword, focus)
+module Util exposing ((=>), dictGetWithDefault, isValidPassword, focus, blur)
 
 import Dict exposing (Dict)
 import Dom
@@ -31,4 +31,9 @@ isValidPassword dict passwordKey repeatKey =
 focus : String -> msg -> Cmd msg
 focus elementId onSucessMsg =
     Dom.focus elementId
+        |> Task.attempt (\_ -> onSucessMsg)
+
+blur : String -> msg -> Cmd msg
+blur elementId onSucessMsg =
+    Dom.blur elementId
         |> Task.attempt (\_ -> onSucessMsg)
