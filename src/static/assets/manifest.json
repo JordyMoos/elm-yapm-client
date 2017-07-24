@@ -1,0 +1,36 @@
+{
+  "name": "Yet another password manager",
+  "short_name": "yapm",
+  "icons": [
+    {
+      "src": "/img/favicon-64x64.png",
+      "sizes": "64x64",
+      "type": "image/png"
+    },
+    {
+      "src": "/img/favicon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png"
+    },
+    {
+      "src": "/img/favicon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png"
+    },
+    {
+      "src": "/img/favicon-256x256.png",
+      "sizes": "256x256",
+      "type": "image/png"
+    },
+    {
+      "src": "/img/favicon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#009688",
+  "background_color": "#000000",
+  "start_url": "/",
+  "display": "fullscreen",
+  "orientation": "portrait"
+}

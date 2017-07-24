@@ -1,6 +1,6 @@
 {
-  "apiEndPoint": "http://localhost:8001",
+  "apiEndPoint": "https://jordymoos.com/server/",
   "localStorageKey": "password-library",
   "maxIdleTime": 30,
-  "randomPasswordSize": 30
+  "randomPasswordSize": 32
 }

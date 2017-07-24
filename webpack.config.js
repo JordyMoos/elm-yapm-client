@@ -3,6 +3,7 @@ var merge = require('webpack-merge');
 var CopyWebpackPlugin = require('copy-webpack-plugin');
 var HTMLWebpackPlugin = require('html-webpack-plugin');
 var HtmlWebpackInlineSourcePlugin = require('html-webpack-inline-source-plugin');
+var OfflinePlugin = require('offline-plugin');
 var path = require('path');
 
 var TARGET_ENV = process.env.npm_lifecycle_event === 'prod'
@@ -26,6 +27,36 @@ var common = {
             // inject details of output file at end of body
             inject: 'body',
             inlineSource: '.(js|css)$'
+        }),
+
+        // it's always better if OfflinePlugin is the last plugin added
+        new OfflinePlugin({
+            publicPath: '/',
+            caches: {
+                main: [],
+                additional: [
+                  ':externals:'
+                ],
+                optional: [
+                  ':rest:'
+                ]
+            },
+            externals: [
+                '/',
+                '/server/'
+            ],
+            excludes: [
+                '**/.*',
+                '**/*.map',
+                'remove-me.js'
+            ],
+            responseStrategy: 'network-first',
+            autoUpdate: true,
+            ServiceWorker: {
+                cacheName: 'yapm',
+                navigateFallbackURL: '/',
+                events: true
+            }
         })
     ],
     resolve: {
@@ -129,6 +160,11 @@ if (TARGET_ENV === 'production') {
     console.log('Building for prod...');
     module.exports = merge(common, {
         plugins: [
+            new CopyWebpackPlugin([
+                {
+                    from: 'src/static/assets'
+                }
+            ]),
             new webpack.optimize.UglifyJsPlugin(),
             new HtmlWebpackInlineSourcePlugin()
         ],
