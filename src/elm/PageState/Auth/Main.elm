@@ -157,6 +157,7 @@ update msg model =
     case msg of
         FinishFilter ->
             ( model, Util.blur "filter" NoOp, None )
+
         NoOp ->
             ( model, Cmd.none, None )
 
@@ -515,7 +516,7 @@ viewNotification notificationData =
 viewNavBar : Model -> Html Msg
 viewNavBar model =
     nav [ attribute "role" "navigation" ]
-        [ Html.form 
+        [ Html.form
             [ id "filterContainer"
             , attribute "role" "form"
             , onSubmit FinishFilter
@@ -565,6 +566,7 @@ viewPassword { password, id, isVisible } =
     let
         stringId =
             toString id
+
         eyeClass =
             if isVisible then
                 "icon-eye-off"

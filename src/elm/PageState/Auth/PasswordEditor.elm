@@ -147,7 +147,15 @@ view model =
                 [ button
                     [ onClick GetRandomPassword ]
                     [ i [ class "icon-shuffle" ] []
-                    , text "Random Password"
+                    , text "Randomize"
+                    ]
+                , button
+                    [ class "copyable copyPassword"
+                    , onClick (ContentCopied "password")
+                    , attribute "data-clipboard-text" <| Util.dictGetWithDefault model.fields "" "password"
+                    ]
+                    [ i [ class "icon-docs" ] []
+                    , text "Copy"
                     ]
                 , button
                     [ onClick Submit ]
@@ -160,11 +168,11 @@ view model =
 
 viewForm : Model -> Html Msg
 viewForm model =
-    Html.form []
-        <| viewFormInput "title" model.fields "Title" "text" FieldInput
+    Html.form [] <|
+        viewFormInput "title" model.fields "Title" "text" FieldInput
             ++ viewFormInput "url" model.fields "URL" "text" FieldInput
             ++ viewFormInput "username" model.fields "Username" "text" FieldInput
-            ++ viewCopyPasswordFormInput (ContentCopied "password") "password" model.fields "Password" "password" FieldInput
+            ++ viewFormInput "password" model.fields "Password" "password" FieldInput
             ++ viewFormInput "passwordRepeat" model.fields "Password Repeat" "password" FieldInput
             ++ viewFormInput "comment" model.fields "Comment" "text" FieldInput
 

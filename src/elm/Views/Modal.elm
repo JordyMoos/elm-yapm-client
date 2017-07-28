@@ -28,8 +28,8 @@ viewModalHeader closeMsg title =
         ]
 
 
-viewDefaultFormInput : List (Html msg) -> String -> Dict String String -> String -> String -> (String -> String -> msg) -> List (Html msg)
-viewDefaultFormInput additionalHtmlList dictName fields title inputType onInputMsg =
+viewFormInput : String -> Dict String String -> String -> String -> (String -> String -> msg) -> List (Html msg)
+viewFormInput dictName fields title inputType onInputMsg =
     let
         maybeFieldValue =
             Dict.get dictName fields
@@ -46,32 +46,10 @@ viewDefaultFormInput additionalHtmlList dictName fields title inputType onInputM
                     , id dictName
                     ]
                     []
-                ] ++ additionalHtmlList
+                ]
 
             Nothing ->
                 []
-
-
-viewCopyPasswordFormInput : msg -> String -> Dict String String -> String -> String -> (String -> String -> msg) -> List (Html msg)
-viewCopyPasswordFormInput onClickMsg dictName fields title inputType onInputMsg =
-    viewDefaultFormInput
-        [ a
-            [ class "copyable copyPassword"
-            , attribute "data-clipboard-text" <| Util.dictGetWithDefault fields "" dictName
-            , onClick onClickMsg
-            ]
-            [ i [ class "icon-docs" ] [] ]
-        ]
-        dictName
-        fields
-        title
-        inputType
-        onInputMsg
-
-
-viewFormInput : String -> Dict String String -> String -> String -> (String -> String -> msg) -> List (Html msg)
-viewFormInput =
-    viewDefaultFormInput []
 
 
 onSelfClickWithId : String -> msg -> msg -> List (Attribute msg)
