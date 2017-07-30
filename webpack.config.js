@@ -16,6 +16,9 @@ for (var key in appConfig) {
   }
 }
 
+console.log(process.env);
+console.log(appConfig);
+
 var TARGET_ENV = process.env.npm_lifecycle_event === 'prod'
     ? 'production'
     : 'development';
