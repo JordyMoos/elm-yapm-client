@@ -81,3 +81,9 @@ $ yarn dev
  ```
 
 Then goto `localhost:3000` in the browser.
+
+### Override config from environment
+
+All keys set in the `config.json` can be overriden with environment variables from their snakecased-upper name.
+
+For example; to override `maxIdleTime` you can set the environment variable `MAX_IDLE_TIME`.

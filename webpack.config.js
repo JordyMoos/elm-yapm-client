@@ -6,6 +6,16 @@ var HtmlWebpackInlineSourcePlugin = require('html-webpack-inline-source-plugin')
 var WebpackPwaManifest = require('webpack-pwa-manifest');
 var path = require('path');
 
+var appConfig = require('./config.json');
+for (var key in appConfig) {
+  if (appConfig.hasOwnProperty(key)) {
+    var envName = key.replace(/([A-Z])/g, function($1){return "_"+$1}).toUpperCase();
+    if (envName in process.env) {
+      appConfig[key] = process.env[envName];
+    }
+  }
+}
+
 var TARGET_ENV = process.env.npm_lifecycle_event === 'prod'
     ? 'production'
     : 'development';
@@ -19,6 +29,9 @@ var common = {
         path: path.join(__dirname, "dist"),
         // add hash when building for production
         filename: filename
+    },
+    externals: {
+      'Config': JSON.stringify(appConfig)
     },
     plugins: [
         new HTMLWebpackPlugin({
