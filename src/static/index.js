@@ -1,7 +1,7 @@
 'use strict';
 
 import Clipboard from 'clipboard';
-import config from '../../config.json';
+import Config from 'Config';
 import { decryptLibrary, encryptLibrary } from './js/manager.js';
 
 // require('./index.html');
@@ -9,7 +9,7 @@ require("./css/style.css");
 require("./css/yapm.css");
 
 let Elm = require('./../elm/Main');
-let app = Elm.Main.fullscreen(config);
+let app = Elm.Main.fullscreen(Config);
 
 function getErrorMessage(error) {
   if (typeof(error) === 'string') {
