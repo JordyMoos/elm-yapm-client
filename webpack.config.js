@@ -42,6 +42,9 @@ configSchema.forEach(function (propertySchema) {
     appConfig[propertySchema.key] = cast(appConfig[propertySchema.key], propertySchema.type);
 });
 
+console.log('Config used:');
+console.log(appConfig);
+
 var TARGET_ENV = process.env.npm_lifecycle_event === 'prod'
     ? 'production'
     : 'development';
