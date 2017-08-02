@@ -6,18 +6,41 @@ var HtmlWebpackInlineSourcePlugin = require('html-webpack-inline-source-plugin')
 var WebpackPwaManifest = require('webpack-pwa-manifest');
 var path = require('path');
 
-var appConfig = require('./config.json');
-for (var key in appConfig) {
-  if (appConfig.hasOwnProperty(key)) {
-    var envName = key.replace(/([A-Z])/g, function($1){return "_"+$1}).toUpperCase();
-    if (envName in process.env) {
-      appConfig[key] = process.env[envName];
+function cast(value, type) {
+    switch (type) {
+        case 'string':
+            return value + '';
+
+        case 'bool':
+            return (value + '') == 'true';
+
+        case 'int':
+            return parseInt(value);
+
+        default:
+            throw 'Invalid type "' + type + '" for casting';
     }
-  }
 }
 
-console.log(process.env);
-console.log(appConfig);
+var configSchema = [
+    { key: 'apiEndPoint', type: 'string' },
+    { key: 'localStorageKey', type: 'string' },
+    { key: 'maxIdleTime', type: 'int' },
+    { key: 'randomPasswordSize', type: 'int' },
+    { key: 'masterKeyAllowEdit', type: 'bool' }
+];
+
+var appConfig = require('./config.json');
+configSchema.forEach(function (propertySchema) {
+    // Overwrite with environment variable if defined
+    var envName = propertySchema.key.replace(/([A-Z])/g, function($1){return "_"+$1}).toUpperCase();
+    if (envName in process.env) {
+        appConfig[propertySchema.key] = value;
+    }
+
+    // Cast to the proper type
+    appConfig[propertySchema.key] = cast(appConfig[propertySchema.key], propertySchema.type);
+});
 
 var TARGET_ENV = process.env.npm_lifecycle_event === 'prod'
     ? 'production'
