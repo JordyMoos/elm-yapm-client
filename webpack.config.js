@@ -35,7 +35,7 @@ configSchema.forEach(function (propertySchema) {
     // Overwrite with environment variable if defined
     var envName = propertySchema.key.replace(/([A-Z])/g, function($1){return "_"+$1}).toUpperCase();
     if (envName in process.env) {
-        appConfig[propertySchema.key] = value;
+        appConfig[propertySchema.key] = process.env[envName];
     }
 
     // Cast to the proper type
