@@ -624,7 +624,7 @@ uploadLibraryCmd : String -> EncryptLibrarySuccess.EncryptLibrarySuccess -> Libr
 uploadLibraryCmd apiEndPoint uploadLibraryRequest oldLibrary oldMasterKey =
     Http.request
         { method = "POST"
-        , headers = [ Http.header "Content-Type" "application/x-www-form-urlencoded" ]
+        , headers = []
         , url = apiEndPoint
         , body = (uploadLibraryBody uploadLibraryRequest)
         , expect = Http.expectString
