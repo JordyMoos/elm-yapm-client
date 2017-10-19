@@ -82,7 +82,10 @@ var common = {
                     sizes: [96, 128, 192, 256, 384, 512] // multiple sizes
                 }
             ]
-        })
+        }),
+        new CopyWebpackPlugin([{
+            from: 'src/static/sw.js'
+        }], {})
     ],
     resolve: {
         modules: [
