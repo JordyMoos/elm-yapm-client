@@ -46,35 +46,15 @@ $ cd yapm-server
 $ composer install
 ```
 
-Super cheaty CORS fix in `index.php`
-```php
-// Add to top of the file
-// This allows cross origin requests
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
-header('Access-Control-Allow-Credentials: true');
-
-// Add just before $app->run();
-// This catches all "options" methods
-$app->match("{url}", function($url) use ($app) { return "OK"; })->assert('url', '.*')->method("OPTIONS");
-```
-
 Run in with php
 ```sh
 $ php -S localhost:8001
 ```
-(Or whatever port is set in elm-yapm-client/config.json)
+
+*All requests to /server will be proxied by the webpack devServer to localhost:8001*
 
 ### Build client:
 
-With npm
-
-```sh
-$ npm install
-$ npm run dev
-```
-
-With yarn
 ```sh
 $ yarn install
 $ yarn dev
@@ -84,6 +64,6 @@ Then goto `localhost:3000` in the browser.
 
 ### Override config from environment
 
-All keys set in the `config.json` can be overriden with environment variables from their snakecased-upper name.
+All keys set in the `config.json` can be overridden with environment variables from their snakecased-upper name.
 
 For example; to override `maxIdleTime` you can set the environment variable `MAX_IDLE_TIME`.
