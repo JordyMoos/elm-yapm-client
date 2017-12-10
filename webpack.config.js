@@ -179,7 +179,15 @@ if (TARGET_ENV === 'development') {
         devServer: {
             inline: true,
             stats: 'errors-only',
-            contentBase: path.join(__dirname, "src/static/assets")
+            contentBase: path.join(__dirname, "src/static/assets"),
+            proxy: {
+                '/server': {
+                    target: 'http://localhost:8001',
+                    pathRewrite: {
+                        '^/server': ''
+                    }
+                }
+            }
         }
     });
 }
